@@ -3,7 +3,7 @@ layout: post
 title: "Cantor展开、全排列问题、魔板问题(JAVA实现)"
 date: 2017-06-14 21:41:03 +0800
 comments: true
-categories: Basic Algrothims
+categories: Algrothims
 ---
 # Cantor展开、全排列问题、魔板问题（JAVA实现）
 

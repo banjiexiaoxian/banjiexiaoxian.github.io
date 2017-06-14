@@ -3,7 +3,7 @@ layout: post
 title: "Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP"
 date: 2017-02-21 22:44:13 +0800
 comments: true
-categories: Basic Algrothims
+categories: Algrothims
 ---
 首先，Dijkstra算法与Floyd算法都是广度优先搜索的算法。都可以用来求单源点到其他所有点的最短路径。那么这两者的原理分别是怎样?彼此又有什么区别呢？
 
