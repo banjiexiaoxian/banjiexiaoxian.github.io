@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Netty | Spencer's blog]]></title>
-  <link href="http://spencer.me/blog/categories/netty/atom.xml" rel="self"/>
-  <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:34:06+08:00</updated>
-  <id>http://spencer.me/</id>
+  <link href="http://spencer.isme/blog/categories/netty/atom.xml" rel="self"/>
+  <link href="http://spencer.isme/"/>
+  <updated>2017-06-14T22:41:23+08:00</updated>
+  <id>http://spencer.isme/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Netty入门之创建Maven多模块依赖项目]]></title>
-    <link href="http://spencer.me/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/"/>
+    <link href="http://spencer.isme/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/"/>
     <updated>2017-05-03T16:01:07+08:00</updated>
-    <id>http://spencer.me/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu</id>
+    <id>http://spencer.isme/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu</id>
     <content type="html"><![CDATA[<p>新学Netty，编译运行时踩了一些坑，记录在此。
 essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
 <a href="https://waylau.gitbooks.io/essential-netty-in-action/content/index.html">(Essential Netty in Action)</a></p>

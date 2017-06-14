@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Spencer's blog]]></title>
-  <link href="http://spencer.me/atom.xml" rel="self"/>
-  <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:34:06+08:00</updated>
-  <id>http://spencer.me/</id>
+  <link href="http://spencer.isme/atom.xml" rel="self"/>
+  <link href="http://spencer.isme/"/>
+  <updated>2017-06-14T22:41:23+08:00</updated>
+  <id>http://spencer.isme/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[Cantor展开、全排列问题、魔板问题(JAVA实现)]]></title>
-    <link href="http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/"/>
+    <link href="http://spencer.isme/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/"/>
     <updated>2017-06-14T21:41:03+08:00</updated>
-    <id>http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian</id>
+    <id>http://spencer.isme/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian</id>
     <content type="html"><![CDATA[<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
 
 <ul>
@@ -672,9 +672,9 @@
   
   <entry>
     <title type="html"><![CDATA[Netty入门之创建Maven多模块依赖项目]]></title>
-    <link href="http://spencer.me/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/"/>
+    <link href="http://spencer.isme/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/"/>
     <updated>2017-05-03T16:01:07+08:00</updated>
-    <id>http://spencer.me/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu</id>
+    <id>http://spencer.isme/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu</id>
     <content type="html"><![CDATA[<p>新学Netty，编译运行时踩了一些坑，记录在此。
 essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
 <a href="https://waylau.gitbooks.io/essential-netty-in-action/content/index.html">(Essential Netty in Action)</a></p>
@@ -1271,9 +1271,9 @@ essential netty in action中有一个入门demo，EchoServer and EchoClient，�
   
   <entry>
     <title type="html"><![CDATA[HashMap源码学习笔记]]></title>
-    <link href="http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/"/>
+    <link href="http://spencer.isme/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/"/>
     <updated>2017-03-20T18:18:51+08:00</updated>
-    <id>http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
+    <id>http://spencer.isme/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
     <content type="html"><![CDATA[<p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
 本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
 
@@ -1544,9 +1544,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
   
   <entry>
     <title type="html"><![CDATA[Java多线程之死锁情形（持续更新)]]></title>
-    <link href="http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/"/>
+    <link href="http://spencer.isme/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/"/>
     <updated>2017-03-18T20:41:31+08:00</updated>
-    <id>http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin</id>
+    <id>http://spencer.isme/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin</id>
     <content type="html"><![CDATA[<p>本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
 持续更新中</p>
 
@@ -1949,9 +1949,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
   
   <entry>
     <title type="html"><![CDATA[Java之单例模式的各种实现]]></title>
-    <link href="http://spencer.me/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/"/>
+    <link href="http://spencer.isme/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/"/>
     <updated>2017-03-14T16:07:05+08:00</updated>
-    <id>http://spencer.me/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
+    <id>http://spencer.isme/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
     <content type="html"><![CDATA[<p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
 先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
 
@@ -2195,9 +2195,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
   
   <entry>
     <title type="html"><![CDATA[Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP]]></title>
-    <link href="http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/"/>
+    <link href="http://spencer.isme/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/"/>
     <updated>2017-02-21T22:44:13+08:00</updated>
-    <id>http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp</id>
+    <id>http://spencer.isme/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp</id>
     <content type="html"><![CDATA[<p>首先，Dijkstra算法与Floyd算法都是广度优先搜索的算法。都可以用来求单源点到其他所有点的最短路径。那么这两者的原理分别是怎样?彼此又有什么区别呢？</p>
 
 <h2>求此有向图中起点1到其他所有点的最短距离</h2>
