@@ -1,13 +1,16 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sitemaps.org/schemas/sitemap/0.9 http://www.sitemaps.org/schemas/sitemap/0.9/sitemap.xsd" xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 <url>
-<loc>http://banjiexiaoxian.github.io/blog/2017/06/14/the-first-post/</loc>
-<lastmod>2017-06-14T20:22:08+08:00</lastmod>
+<loc>http://spencer.me/blog/2017/06/14/the-first-post-of-my-blog/</loc>
+<lastmod>2017-06-14T20:32:38+08:00</lastmod>
 </url>
 <url>
-<loc>http://banjiexiaoxian.github.io/</loc>
+<loc>http://spencer.me/</loc>
 </url>
 <url>
-<loc>http://banjiexiaoxian.github.io/blog/archives/</loc>
+<loc>http://spencer.me/blog/archives/</loc>
+</url>
+<url>
+<loc>http://spencer.me/blog/categories/learntouse/</loc>
 </url>
 </urlset>
