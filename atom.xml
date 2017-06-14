@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[My Octopress Blog]]></title>
+  <link href="http://banjiexiaoxian.github.io/atom.xml" rel="self"/>
+  <link href="http://banjiexiaoxian.github.io/"/>
+  <updated>2017-06-14T20:29:58+08:00</updated>
+  <id>http://banjiexiaoxian.github.io/</id>
+  <author>
+    <name><![CDATA[Your Name]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[The First Post]]></title>
+    <link href="http://banjiexiaoxian.github.io/blog/2017/06/14/the-first-post/"/>
+    <updated>2017-06-14T20:22:08+08:00</updated>
+    <id>http://banjiexiaoxian.github.io/blog/2017/06/14/the-first-post</id>
+    <content type="html"><![CDATA[
+]]></content>
+  </entry>
+  
+</feed>
