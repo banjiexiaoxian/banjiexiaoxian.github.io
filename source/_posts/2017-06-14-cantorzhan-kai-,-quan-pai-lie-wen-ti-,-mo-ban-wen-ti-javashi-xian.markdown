@@ -5,8 +5,6 @@ date: 2017-06-14 21:41:03 +0800
 comments: true
 categories: Algrothims
 ---
-# Cantor展开、全排列问题、魔板问题（JAVA实现）
-
 本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题
 
 - **全排列问题**
