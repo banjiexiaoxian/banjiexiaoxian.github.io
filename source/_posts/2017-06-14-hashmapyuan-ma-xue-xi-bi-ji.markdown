@@ -7,6 +7,7 @@ categories: JDK
 ---
 理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
 本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。
+<!—more—>
 ###源码中的doc
 HashMap大致上跟HashTable相同，但是HashMap是非线程安全的，而且支持Null Key和Null Value.
 当有多个线程同时访问HashMap时，若其中存在线程对HashMap进行modify structurally（包括put、remove操作，不包括set、get操作），那么就需要考虑线程同步的HashMap，比如synchronizedMap或者concurrentHashMap。
