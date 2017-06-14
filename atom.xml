@@ -4,7 +4,7 @@
   <title><![CDATA[Spencer's blog]]></title>
   <link href="http://spencer.me/atom.xml" rel="self"/>
   <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:01:00+08:00</updated>
+  <updated>2017-06-14T22:34:06+08:00</updated>
   <id>http://spencer.me/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
@@ -18,9 +18,7 @@
     <link href="http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/"/>
     <updated>2017-06-14T21:41:03+08:00</updated>
     <id>http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian</id>
-    <content type="html"><![CDATA[<h1>Cantor展开、全排列问题、魔板问题（JAVA实现）</h1>
-
-<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
+    <content type="html"><![CDATA[<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
 
 <ul>
 <li><strong>全排列问题</strong></li>
@@ -29,11 +27,10 @@
 </ul>
 
 
+<!--more-->
+
+
 <hr />
-
-<h2>目录</h2>
-
-<p>[TOC]</p>
 
 <h2>问题：给定字符串S[0…N-1]，设计算法，枚举S的全排列</h2>
 
@@ -682,6 +679,9 @@
 essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
 <a href="https://waylau.gitbooks.io/essential-netty-in-action/content/index.html">(Essential Netty in Action)</a></p>
 
+<!--more-->
+
+
 <h3>EchoClient主要功能</h3>
 
 <p>1、启动客户端，发起连接</p>
@@ -1277,6 +1277,9 @@ essential netty in action中有一个入门demo，EchoServer and EchoClient，�
     <content type="html"><![CDATA[<p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
 本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
 
+<!--more-->
+
+
 <h3>源码中的doc</h3>
 
 <p>HashMap大致上跟HashTable相同，但是HashMap是非线程安全的，而且支持Null Key和Null Value.
@@ -1546,6 +1549,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
     <id>http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin</id>
     <content type="html"><![CDATA[<p>本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
 持续更新中</p>
+
+<!--more-->
+
 
 <h3>1、多生产者多消费者问题中由于所有角色共享一个同步锁而发生死锁  <a href="http://www.2cto.com/kf/201410/344213.html"><strong><em>来源链接</em></strong></a></h3>
 
@@ -1949,6 +1955,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
     <content type="html"><![CDATA[<p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
 先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
 
+<!--more-->
+
+
 <h2>饿汉式</h2>
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
@@ -2194,6 +2203,9 @@ indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了
 <h2>求此有向图中起点1到其他所有点的最短距离</h2>
 
 <p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。</p>
+
+<!--more-->
+
 
 <figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
 <span class='line-number'>2</span>

@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Jdk | Spencer's blog]]></title>
   <link href="http://spencer.me/blog/categories/jdk/atom.xml" rel="self"/>
   <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:01:00+08:00</updated>
+  <updated>2017-06-14T22:34:06+08:00</updated>
   <id>http://spencer.me/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
@@ -20,6 +20,9 @@
     <id>http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
     <content type="html"><![CDATA[<p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
 本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
+
+<!--more-->
+
 
 <h3>源码中的doc</h3>
 
@@ -242,6 +245,9 @@ Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Th
 <span class='line-number'>154</span>
 <span class='line-number'>155</span>
 <span class='line-number'>156</span>
+<span class='line-number'>157</span>
+<span class='line-number'>158</span>
+<span class='line-number'>159</span>
 </pre></td><td class='code'><pre><code class=''><span class='line'>/&lt;em&gt;*
 </span><span class='line'>    put操作
 </span><span class='line'>     &lt;/em&gt;/
@@ -353,6 +359,9 @@ Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Th
 </span><span class='line'>    &lt;id&gt;http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin&lt;/id&gt;
 </span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;p&gt;本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
 </span><span class='line'>持续更新中&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;!--more--&gt;
+</span><span class='line'>
 </span><span class='line'>
 </span><span class='line'>&lt;h3&gt;1、多生产者多消费者问题中由于所有角色共享一个同步锁而发生死锁  &lt;a href="http://www.2cto.com/kf/201410/344213.html"&gt;&lt;strong&gt;&lt;em&gt;来源链接&lt;/em&gt;&lt;/strong&gt;&lt;/a&gt;&lt;/h3&gt;
 </span><span class='line'>
@@ -574,6 +583,9 @@ public class SymmetricLockDeadlockDemo {
     <id>http://spencer.me/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
     <content type="html"><![CDATA[<p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
 先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
+
+<!--more-->
+
 
 <h2>饿汉式</h2>
 

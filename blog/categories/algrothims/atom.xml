@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Algrothims | Spencer's blog]]></title>
   <link href="http://spencer.me/blog/categories/algrothims/atom.xml" rel="self"/>
   <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:01:00+08:00</updated>
+  <updated>2017-06-14T22:34:06+08:00</updated>
   <id>http://spencer.me/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
@@ -18,9 +18,7 @@
     <link href="http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/"/>
     <updated>2017-06-14T21:41:03+08:00</updated>
     <id>http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian</id>
-    <content type="html"><![CDATA[<h1>Cantor展开、全排列问题、魔板问题（JAVA实现）</h1>
-
-<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
+    <content type="html"><![CDATA[<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
 
 <ul>
 <li><strong>全排列问题</strong></li>
@@ -29,11 +27,10 @@
 </ul>
 
 
+<!--more-->
+
+
 <hr />
-
-<h2>目录</h2>
-
-<p>[TOC]</p>
 
 <h2>问题：给定字符串S[0…N-1]，设计算法，枚举S的全排列</h2>
 
@@ -469,13 +466,17 @@ public class Permutation {
 
 <h2>求此有向图中起点1到其他所有点的最短距离</h2>
 
-<p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。
-<code>
-Graph[3][3] = {0,5,6
+<p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。</p>
+
+<!--more-->
+
+
+<pre><code>Graph[3][3] = {0,5,6
                 1000,0,1000
                 1000,-2,0}
-</code>
-<img src="http://img.blog.csdn.net/20170221223145768?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="一个简单的有向图" /></p>
+</code></pre>
+
+<p><img src="http://img.blog.csdn.net/20170221223145768?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="一个简单的有向图" /></p>
 
 <h3>Dijskra算法</h3>
 

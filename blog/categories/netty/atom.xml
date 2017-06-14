@@ -4,7 +4,7 @@
   <title><![CDATA[Category: Netty | Spencer's blog]]></title>
   <link href="http://spencer.me/blog/categories/netty/atom.xml" rel="self"/>
   <link href="http://spencer.me/"/>
-  <updated>2017-06-14T22:01:00+08:00</updated>
+  <updated>2017-06-14T22:34:06+08:00</updated>
   <id>http://spencer.me/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
@@ -21,6 +21,9 @@
     <content type="html"><![CDATA[<p>新学Netty，编译运行时踩了一些坑，记录在此。
 essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
 <a href="https://waylau.gitbooks.io/essential-netty-in-action/content/index.html">(Essential Netty in Action)</a></p>
+
+<!--more-->
+
 
 <h3>EchoClient主要功能</h3>
 
