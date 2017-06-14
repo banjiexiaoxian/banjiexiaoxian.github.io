@@ -13,7 +13,7 @@ categories: Algrothims
 - **Cantor展开**
 - **魔板问题**
 
-<!—more—>
+<!--more-->
 -------------------
 
 

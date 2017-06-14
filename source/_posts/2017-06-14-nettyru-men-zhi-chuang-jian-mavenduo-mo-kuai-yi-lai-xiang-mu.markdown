@@ -8,7 +8,7 @@ categories: Netty
 新学Netty，编译运行时踩了一些坑，记录在此。
 essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
 [(Essential Netty in Action)](https://waylau.gitbooks.io/essential-netty-in-action/content/index.html)
-<!—more—>
+<!--more-->
 ###EchoClient主要功能
 1、启动客户端，发起连接
 
