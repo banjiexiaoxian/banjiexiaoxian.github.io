@@ -2,10 +2,10 @@
 <feed xmlns="http://www.w3.org/2005/Atom">
 
   <title><![CDATA[Category: Jdk | Spencer's blog]]></title>
-  <link href="http://spencer.isme/blog/categories/jdk/atom.xml" rel="self"/>
-  <link href="http://spencer.isme/"/>
-  <updated>2017-06-14T22:41:23+08:00</updated>
-  <id>http://spencer.isme/</id>
+  <link href="http://spencer.com/blog/categories/jdk/atom.xml" rel="self"/>
+  <link href="http://spencer.com/"/>
+  <updated>2017-06-14T22:45:07+08:00</updated>
+  <id>http://spencer.com/</id>
   <author>
     <name><![CDATA[Spencer]]></name>
     
@@ -15,9 +15,9 @@
   
   <entry>
     <title type="html"><![CDATA[HashMap源码学习笔记]]></title>
-    <link href="http://spencer.isme/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/"/>
+    <link href="http://spencer.com/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/"/>
     <updated>2017-03-20T18:18:51+08:00</updated>
-    <id>http://spencer.isme/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
+    <id>http://spencer.com/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
     <content type="html"><![CDATA[<p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
 本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
 
@@ -354,9 +354,9 @@ Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Th
 </span><span class='line'>  
 </span><span class='line'>  &lt;entry&gt;
 </span><span class='line'>    &lt;title type="html"&gt;&lt;![CDATA[Java多线程之死锁情形（持续更新)]]&gt;&lt;/title&gt;
-</span><span class='line'>    &lt;link href="http://spencer.isme/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/"/&gt;
+</span><span class='line'>    &lt;link href="http://spencer.com/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/"/&gt;
 </span><span class='line'>    &lt;updated&gt;2017-03-18T20:41:31+08:00&lt;/updated&gt;
-</span><span class='line'>    &lt;id&gt;http://spencer.isme/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin&lt;/id&gt;
+</span><span class='line'>    &lt;id&gt;http://spencer.com/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin&lt;/id&gt;
 </span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;p&gt;本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
 </span><span class='line'>持续更新中&lt;/p&gt;
 </span><span class='line'>
@@ -578,9 +578,9 @@ public class SymmetricLockDeadlockDemo {
   
   <entry>
     <title type="html"><![CDATA[Java之单例模式的各种实现]]></title>
-    <link href="http://spencer.isme/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/"/>
+    <link href="http://spencer.com/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/"/>
     <updated>2017-03-14T16:07:05+08:00</updated>
-    <id>http://spencer.isme/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
+    <id>http://spencer.com/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
     <content type="html"><![CDATA[<p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
 先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
 
