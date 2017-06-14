@@ -1,0 +1,550 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Algrothims | Spencer's blog]]></title>
+  <link href="http://spencer.me/blog/categories/algrothims/atom.xml" rel="self"/>
+  <link href="http://spencer.me/"/>
+  <updated>2017-06-14T22:01:00+08:00</updated>
+  <id>http://spencer.me/</id>
+  <author>
+    <name><![CDATA[Spencer]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[Cantor展开、全排列问题、魔板问题(JAVA实现)]]></title>
+    <link href="http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/"/>
+    <updated>2017-06-14T21:41:03+08:00</updated>
+    <id>http://spencer.me/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian</id>
+    <content type="html"><![CDATA[<h1>Cantor展开、全排列问题、魔板问题（JAVA实现）</h1>
+
+<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
+
+<ul>
+<li><strong>全排列问题</strong></li>
+<li><strong>Cantor展开</strong></li>
+<li><strong>魔板问题</strong></li>
+</ul>
+
+
+<hr />
+
+<h2>目录</h2>
+
+<p>[TOC]</p>
+
+<h2>问题：给定字符串S[0…N-1]，设计算法，枚举S的全排列</h2>
+
+<p>以一个简单的示例来表示解题过程
+示例 枚举0123的全排列
+0123 0132 0213 0231 0312 0321
+1023 1032 1203 1230 1302 1320
+2013 2031 2103 2130 2301 2310
+3012 3021 3102 3120 3201 3210
+手动写出这些序列的时候，实际上是脑补了一个树形结构，如下：
+<img src="http://img.blog.csdn.net/20170220113519218?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述" />
+画出这个树的过程实际上是一个深度搜索的过程，每次到达叶子节点时就产生一个输出，之后再回溯，搜索下一个叶子节点。
+深度搜索的过程实际上就是一个入栈出栈的过程，也就是一个递归过程。</p>
+
+<h3>全排列之递归解法</h3>
+
+<p>使用递归时，代码结构是很清晰，也容易理解，便不再赘述，直接上代码。</p>
+
+<pre><code>//无重复的全排列递归写法
+public class Permutation {
+    public static final int N = 4;
+    public static void main(String[] args){
+        //初始化
+        int[] sequence = new int[N];
+        for(int i = 0;i &lt; N;i++){
+            sequence[i] = i+1;
+        }
+        permutation(sequence,N,0);
+    }
+
+    private static void print(int[] sequence){
+        for(int i : sequence){
+            System.out.print(i);
+        }
+        System.out.println();
+    }
+
+    private static void swap(int[] sequence,int i, int j){
+        int tmp = sequence[i];
+        sequence[i] = sequence[j];
+        sequence[j] = tmp;
+    }
+    //固定前n位的全排列
+    public static void permutation(int[] sequence, int size, int n){
+        if(n == size - 1) print(sequence);
+
+        for(int i = n; i &lt; size;i++){
+            //用其他位来交换第n位
+            swap(sequence,i,n);
+            permutation(sequence,size,n+1);
+            swap(sequence,i,n);
+        }
+    }
+}
+</code></pre>
+
+<p>当出现重复元素时，在用其他位交换第n位时，会有相同的两个位均与n位发生了交换。所以我们需要在交换时判断该位是否在之前已经被放置到n位过。
+为了判断某个元素是否已经被访问过，另增加一个duplication数组。
+与无重复元素的序列全排列相比，仅在permutation函数中增加了一个参数及两行代码。
+代码如下
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//有重复的递归写法
+</span><span class='line'>public class PermutationWithDuplicate {
+</span><span class='line'>    public static final int N = 4;&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;public static void main(String[] args){
+</span><span class='line'>    //初始化
+</span><span class='line'>    int[] sequence = {1,2,3,4};
+</span><span class='line'>    boolean[] duplication = new boolean[N];
+</span><span class='line'>    permutation(duplication,sequence,N,0);
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>private static void print(int[] sequence){
+</span><span class='line'>    for(int i : sequence){
+</span><span class='line'>        System.out.print(i);
+</span><span class='line'>    }
+</span><span class='line'>    System.out.println();
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>private static void swap(int[] sequence,int i, int j){
+</span><span class='line'>    int tmp = sequence[i];
+</span><span class='line'>    sequence[i] = sequence[j];
+</span><span class='line'>    sequence[j] = tmp;
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>public static void permutation(boolean[] duplication,int[] sequence,int size,int n){
+</span><span class='line'>
+</span><span class='line'>    //遍历每一根隐式树时，duplication的状态应该是要刷新的
+</span><span class='line'>    //所以duplication不能作为全局变量，这样会导致所有递归状态共用一个duplication
+</span><span class='line'>
+</span><span class='line'>    //如果作为局部变量，那么每次调用permutation都需要重新创建这个数组，并且这个数组不会被全部访问到，耗费了时间和空间
+</span><span class='line'>    //所以作为参数在递归状态间传递，注意在回溯时需要恢复第n位，以及duplication数组。
+</span><span class='line'>    //因为非基本数据类型的参数都是传址引用，如果不恢复duplication的值，那么会导致所有递归状态共用一个duplication
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;//      boolean[] duplication = new boolean[N];
+</span><span class='line'>        if(n == size-1){
+</span><span class='line'>            print(sequence);
+</span><span class='line'>        }
+</span><span class='line'>        for(int i = n;i &lt; size;i++){
+</span><span class='line'>            if(!duplication[(sequence[i]%N)]){
+</span><span class='line'>                duplication[(sequence[i]%N)] = true;
+</span><span class='line'>                swap(sequence,i,n);
+</span><span class='line'>                permutation(duplication,sequence,size,n+1);
+</span><span class='line'>                swap(sequence,i,n);
+</span><span class='line'>                duplication[(sequence[i]%N)] = false;
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure></p>
+
+<h3>全排列之非递归解法</h3>
+
+<p>如果是对1234字符串，枚举其所有排列。相当于就是把由1、2、3、4构成的数字全部列举出来。既要列举，自然有个顺序，不妨从小到大列举。
+1234 1243 1324 1342 1423 1432
+2134 2143 2314 2341 2413 2431
+3124 3142 3214 3241 3412 3421
+4123 4132 4213 4231 4312 4321</p>
+
+<p>每一次迭代，我们都希望获取比当前的序列稍大的序列。而比当前的序列稍大的序列仅仅只与当前的序列相关，也就是通过当前的permutation，我们能立刻得到next permutation.了解了这个原理后，程序的框架便出来了。</p>
+
+<pre><code>while(hasNextPermutation){
+    getNextPermutation();
+    print;
+}
+</code></pre>
+
+<p>可以看到，当某个序列从首位到末位是依次递减时，是不可能再增大的。
+反之，当某个序列的低位比高位大时，可以将低位和高位交换，交换后，将此高位后的所有位数重新按次序排列得到新的序列。举例来讲，比如1342，从末位2往前遍历，4比3大，将4与3交换变为1432，再将4后面的32按从小到大的次序变为23，最后得到next permutation为1423。
+代码如下：</p>
+
+<pre><code>public class NextPermutation {
+    public static final int N = 4;
+    public static void main(String[] args){
+        //初始化
+        int[] sequence = new int[N];
+        for(int i = 0;i &lt; N;i++){
+            sequence[i] = i+1;
+        }
+        permutation(sequence);
+    }
+    public static void permutation(int[] sequence){
+        print(sequence);
+        int[] tmp = getNextPermutation(sequence);
+        while(null != tmp){
+            print(tmp);
+            tmp = getNextPermutation(tmp);
+        }
+    }
+    private static void print(int[] sequence){
+        for(int i : sequence){
+            System.out.print(i);
+        }
+        System.out.println();
+    }
+
+    private static void swap(int[] sequence,int i, int j){
+        int tmp = sequence[i];
+        sequence[i] = sequence[j];
+        sequence[j] = tmp;
+    }
+
+    public static int[] getNextPermutation(int[] sequence){
+        int scriptOfNeedSwap = 0;
+        int i;
+        //从后往前找
+        for(i = N - 1;i &gt;= 1;i--){
+            if(sequence[i] &gt; sequence[i-1]){
+                scriptOfNeedSwap = i - 1;
+                break;
+            }
+        }
+
+        if(i == 0) return null;
+        //找到第一个递减的位置，交换
+        for(i = N - 1;i &gt; scriptOfNeedSwap;i-- ){
+            if(sequence[i] &gt; sequence[scriptOfNeedSwap]){
+                swap(sequence,i,scriptOfNeedSwap);
+                break;
+            }
+        }
+        //可以看到一个规律，交换之后后面的几位均是降序的，此时只需要对其进行翻转即可
+        //翻转
+        for(i = N-1;i &gt; scriptOfNeedSwap;i--){
+            swap(sequence,i,++scriptOfNeedSwap);
+            if(i &lt;= scriptOfNeedSwap) break;
+        }
+
+        return sequence;
+    }
+}
+</code></pre>
+
+<p>本解法对于有重复元素的序列是完全适用的，按从小到大的顺序将序列打印出来，天然就能达到去重的目的。</p>
+
+<h2>问题：如何计算N个无重复元素的某个排列是第几个排列</h2>
+
+<p>如何求解这个问题。很自然的想到，使用从小到大的顺序枚举出一个数列的所有排列，直到匹配目标排列。
+然而Cantor展开使用公式解决了这个问题。</p>
+
+<h3>Cantor展开</h3>
+
+<p>关于Cantor展开的原理这里不作详细介绍。Cantor展开的公式为：</p>
+
+<blockquote><p>X=an<em>(n-1)!+an-1</em>(n-2)!+&hellip;+ai<em>(i-1)!+&hellip;+a2</em>1!+a1*0!</p></blockquote>
+
+<p>使用示例来帮助理解利用Cantor展开如何求解本问题。
+假如序列s=[“A”,”B”,”C”,”D”]
+需要求序列s'=[“D”,”A”,”B”,”C”]是序列s的全排列中的第几个排列，记作X(s');</p>
+
+<pre><code>X(s’) =   3（在序列DABC中有3个比D小）*3!+
+            0（在剩下的序列ABC中有0个比A小）*2！+
+            0（在剩下的序列BC中有0个比B小）*1！+
+            0（在剩下的序列C中有0个比C小）*0！
+    =18
+</code></pre>
+
+<p>那么序列s’是s的全排列中第18个排列（从0开始计数）；
+同理可以根据s算第18个排列序列。</p>
+
+<blockquote><p>总结：康托展开是一个全排列到一个自然数的一一映射</p></blockquote>
+
+<h2>魔板问题</h2>
+
+<p>在下面对求解魔板问题的过程中应用了隐式树的思想以及Cantor展开。
+问题描述：
+在魔方风靡全球之后不久，Rubik先生发明了它的简化版――魔板。魔板 由8个同样大小的方块组成，每个方块颜色均不相同，可用数字1-8分别表示。任一时刻魔板的状态可用方块的颜色序列表示：从魔板的左上角开始，按顺时针方 向依次写下各方块的颜色代号，所得到的数字序列即可表示此时魔板的状态。例如，序列(1,2,3,4,5,6,7,8)表示魔板状态为：
+　　1 2 3 4
+　　8 7 6 5
+　　对于魔板，可施加三种不同的操作，具体操作方法如下：
+　　A: 上下两行互换,如上图可变换为状态87654321
+　　B: 每行同时循环右移一格,如上图可变换为41236785
+　　C: 中间4个方块顺时针旋转一格,如上图可变换为17245368
+　　给你魔板的初始状态与目标状态，请给出由初态到目态变换数最少的变换步骤，若有多种变换方案则取字典序最小的那种。</p>
+
+<p>在杭电的OJ上有这样一个题，读者可以作为练习。<a href="http://acm.split.hdu.edu.cn/showproblem.php?pid=1430">题目链接</a></p>
+
+<h3>解题思路</h3>
+
+<p> 魔板的每一种状态，实际上是序列12345678的一种全排列，最多可以有8!=40320种状态。
+ <strong>而魔板问题则是求解状态x最快可以经过多少个状态到达状态y。</strong>
+ 我们也可以脑补出一棵三叉树，编号为1的状态经过A,B,C三种行为到达状态2,3,4。2,3,4再分别经过A,B,C三种行为扩展出更多的状态。
+与最开始的全排列问题不同的是，在遍历这棵树的时候，我们采用的是广度优先搜索的方法，将这棵树做层次遍历，从根节点出发，到达某个节点所需要的最少的变换次数则是这个节点所在的层数。所以，当做广度优先搜索遍历，找到第一个满足条件的状态时，程序就可以返回了。
+确定了广度优先搜索的算法，便可以确定数据结构采用先入先出的队列了。每扩展出新的节点，便将这些新的节点加入到队列中，等待被取出后再度扩展。
+在遍历过程中，我们可以考虑做一些优化。</p>
+
+<ul>
+<li>判重。判断某个节点的状态是否已经遍历过，若已经遍历过，则无需再扩展此节点</li>
+<li>剪枝。 AA，BBBB，CCCC这样的变换路径都是没有必要的，会变回原本的状态</li>
+</ul>
+
+
+<p>由Cantor展开，可以将魔板的每一钟状态映射为一个自然数，这就可以作为判重的依据。而计算Cantor数需要计算阶乘，对阶乘进行优化也是必须的，可以用一个hash数组将需要计算的阶乘事先保存下来。</p>
+
+<p>具体代码如下：</p>
+
+<pre><code>public class MoBanProblem {
+    static int[] hash = {1,1,2,6,24,120,720,5040};
+    public static void main(String args[]){
+        String number = "12345678";
+        String end = "34512678";
+        String rs = null;
+        number = preProcess(number);
+        end = preProcess(end);
+        rs = bfs(number,end);
+        if(rs != null){
+            System.out.println(rs);
+        }else{
+            System.out.println("无法变换");
+        }
+
+
+    }
+    //由于输入的字符串与魔板上字符的顺序不一致，所以需要对数据进行预处理，将后四位翻转
+    private static String preProcess(String number){
+        return number.substring(0,4)+number.substring(7,8)+number.substring(6,7)+number.substring(5,6)+number.substring(4,5);
+    }
+    //上下两行互换
+    public static String fun_A(String number){
+        String a = number.substring(4,8) + number.substring(0,4);
+        return a;
+    }
+    //每行同时循环右移一格
+    public static String fun_B(String number){
+        String a = number.substring(3,4)+number.substring(0,3)+number.substring(7,8)+number.substring(4,7);
+        return a;
+    }
+
+    //中间四个方块顺时针旋转一格
+    public static String fun_C(String number){
+        String a = number.substring(0,1)+number.substring(5,6)+number.substring(1,2)+number.substring(3,4)+
+                number.substring(4,5)+number.substring(6,7)+number.substring(2,3)+number.substring(7,8);
+        return a;
+    }
+
+    private static int getA(String status,int i){
+        int rs = 0;
+        for(int k = i+1;k &lt; status.length();k++){
+            if(status.charAt(k) &lt; status.charAt(i)){
+                rs++;
+            }
+        }
+        return rs;
+    }
+
+
+    //计算当前状态的cantor序号
+    public static int cantor(String status){
+        int[] a = new int[8];
+        int rs = 0;
+        for(int i = 0, j = 7;i &lt; status.length();i++,j--){
+            a[j] = getA(status,i);
+        }
+        for(int i = 7;i &gt;= 0;i--){
+            rs += a[i]*hash[i];
+        }
+        return rs;
+
+    }
+
+
+    public static boolean matches(String a,String b){
+        if(a.length() != b.length()) return false;
+        if(a.equals(b)) return true;
+        else  return false;
+    }
+
+
+    public static String bfs(String start,String end){
+        //某个序列状态是否已被搜索过
+        boolean[] visited = new boolean[40320];
+        String[] ans = new String[40320];
+        Queue&lt;String&gt; status = new Queue&lt;String&gt;();
+        status.enqueue(start);
+        while(!status.isEmpty()){
+            String tmp = status.dequeue();
+            if(matches(tmp,end)){
+                return ans[cantor(tmp)];
+            }
+            if(!visited[cantor(tmp)]){
+                if(ans[cantor(tmp)] == null) ans[cantor(tmp)] = "";
+                if(ans[cantor(tmp)] == "" || ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-1,ans[cantor(tmp)].length()) != "A"){
+                    String fun_A_tmp = fun_A(tmp);
+                    status.enqueue(fun_A_tmp);
+                    ans[cantor(fun_A_tmp)] = ans[cantor(tmp)] + "A";
+                }
+                if(ans[cantor(tmp)].length() &lt; 3 ||ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-3,ans[cantor(tmp)].length()) != "BBB"){
+                    String fun_B_tmp = fun_B(tmp);
+                    status.enqueue(fun_B_tmp);
+                    ans[cantor(fun_B_tmp)] = ans[cantor(tmp)] + "B";
+                }
+                if(ans[cantor(tmp)].length() &lt; 3 ||ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-3,ans[cantor(tmp)].length()) != "CCC"){
+                    String fun_C_tmp = fun_C(tmp);
+                    status.enqueue(fun_C_tmp);
+                    ans[cantor(fun_C_tmp)] = ans[cantor(tmp)] + "C";
+                }
+            }
+            visited[cantor(tmp)] = true;
+
+
+        }
+        return null;
+
+    }
+
+}
+</code></pre>
+
+<blockquote><p>总结：将全排列问题抽象为状态的枚举，将魔板问题抽象为状态的迁移是很关键的。Cantor展开将某个状态映射为某个自然数，在查找以及计数问题中可以起到很大的作用。</p></blockquote>
+
+<hr />
+
+<p><strong>头一次认真写博文</strong>
+<strong>谢谢阅读，欢迎指正~</strong>
+<strong>若有同类问题希望能帮忙补充。</strong></p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP]]></title>
+    <link href="http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/"/>
+    <updated>2017-02-21T22:44:13+08:00</updated>
+    <id>http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp</id>
+    <content type="html"><![CDATA[<p>首先，Dijkstra算法与Floyd算法都是广度优先搜索的算法。都可以用来求单源点到其他所有点的最短路径。那么这两者的原理分别是怎样?彼此又有什么区别呢？</p>
+
+<h2>求此有向图中起点1到其他所有点的最短距离</h2>
+
+<p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。
+<code>
+Graph[3][3] = {0,5,6
+                1000,0,1000
+                1000,-2,0}
+</code>
+<img src="http://img.blog.csdn.net/20170221223145768?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="一个简单的有向图" /></p>
+
+<h3>Dijskra算法</h3>
+
+<p>采用Dijkstra算法，需要有一个源点集合u，一个参考点集合v，以及一个滚动dist数组，用于存储S点到达其他所有点的最短路径。
+如果需要记录最短路线，还需要配置一个pre数组，用来存储当前最短路径下Index序号的点的前驱节点。
+初始化时，u中只有源点s，其他点都在v中，dist数组是s到其他所有点的直接距离，若没有边连接则为无穷大（本例中1000表示无穷大）。</p>
+
+<blockquote><p>初始化状态：u={1},v={2,3},dist[]={0,5,6},pre[]={1,1,1},flag={0,1,1}</p></blockquote>
+
+<p>算法开始，遍历dist查找最小值，将该最小值对应的点添加到u中，并从v中删除。一种实现方式是采用flag数组,0表示在u中，1表示在v中。</p>
+
+<blockquote><p>中间状态1：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>接着需要更新dist数组，判断从起始点1到v中的点之间的路径上插入新加入的点2，路径是否能变得更短，也就是比较dist[j]和Graph[1][2]+dist[2]，然后使用较小值更新dist[j]，若dist[j]被更新，则将pre[j]修改为2.</p>
+
+<blockquote><p>中间状态2：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>然后循环上述步骤，判断在v中且dist最小的点，然后加入到u中。</p>
+
+<blockquote><p>中间状态3: u={1,2,3},v={},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,0}</p></blockquote>
+
+<p>此时发现v中已没有点，则结果被输出。</p>
+
+<p>很显然，这个结果是不对的，从1到2的最短路径应该是1->3->2，长度为4.  而不是1->2，长度为5</p>
+
+<p>这是因为按照Dijkstra的算法逻辑，是不能计算负权图的。
+Dijkstra算法本质上是贪心算法，下一条路径都是由当前更短的路径派生出来的更长的路径。<strong>不存在回溯的过程。</strong>
+如果权值存在负数，那么被派生出来的可能是更短的路径，这就需要过程可以回溯，之前的路径需要被更短的路径替换掉，而Dijkstra算法是不能回溯的。它每一步都是以当前最优选择为前提的。</p>
+
+<h3>Floyd算法</h3>
+
+<p>那么，Floyd算法会怎么做呢？Floyd算法实际上是一个动态规划算法。
+每一个点对u和v之间的最短路径，可能会经过N个点，这些中间点记为k。
+假定u到k之间的最短路径已经找好，k到v之间的最短路径已经找好，那么求u到v之间的最短路径，就是遍历各个可能的k点，然后求(u,k)+(k,v)之间的最小值。
+所以这实际上将大规模的问题自顶向下划分为了小规模的问题，这就是动态规划思想。</p>
+
+<p>那么算法的步骤是怎样的呢？
+需要使用三层循环：</p>
+
+<pre><code>for(u){
+       for(v){
+               for(k)}}
+</code></pre>
+
+<p>若graph[u][k]+graph[k][v] &lt; graph[u][v],则更新graph[u][v]。并记录以当前u为起点的情况下此点的前驱。
+当三层遍历完毕之后，所有点对之间的最短路径长度和路径就能求出来了。当然，如果只需要求某个点到其他所有点的最短距离，那么固定u，也就是说只用两层遍历就可以做到了。
+最后的矩阵为</p>
+
+<pre><code>{0,4,6
+1000,0,1000
+998,-2,0}
+</code></pre>
+
+<p>可以看到，求得的最短路径及其长度均是正确的。
+这是因为动态规划是可以回溯的，会遍历到从1到3再从3到2的路径。</p>
+
+<h2>总结</h2>
+
+<p>上述算法均为两种经典算法的最简单形式，没有任何优化。比如Floyd可以从空间复杂度上进行优化，Dijkstra在选择v中dist最小值时可以使用堆排序等。</p>
+
+<p>本文意在引出一个关于贪心算法和动态规划算法之间区别与联系的论述。（出自邹博老师）
+考虑一阶马尔科夫模型，状态N仅仅可以从状态N-1得到，就像有限状态自动机，这就是正确使用贪心算法的前提。
+考虑高阶马尔科夫模型，状态N可能需要前面的状态N-1,N-2,N-3等等一起联合才能得到。这就是正确使用动态规划的前提。
+<strong>所以一定能用贪心算法解的问题肯定可以由动态规划解。但是可以用动态规划来解的问题，不一定能用贪心算法来解。</strong></p>
+
+<p>使用马尔科夫模型来类比动态规划思想的这个观点还有很多启发思维的地方。
+比如说在构建状态转移方程时，经常因为使用的状态不对，而列不出最终的状态转移方程。
+简单的状态转移方程，只需要考虑一个状态x的变化，而复杂的状态转移方程可能需要考虑x、y或者更多的状态迁移。那么如何找准这些影响最终结果的状态，并找准状态和结果之间的对应关系，是列好状态转移方程的一个重点。</p>
+]]></content>
+  </entry>
+  
+</feed>

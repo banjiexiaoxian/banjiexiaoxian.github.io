@@ -94,21 +94,2416 @@
 
 
 
-<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-06-14T20:32:38+08:00"  data-updated="true" itemprop="datePublished dateCreated">Wed 14 Jun 2017,  8:32 PM</time>
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-06-14T21:41:03+08:00"  data-updated="true" itemprop="datePublished dateCreated">Wed 14 Jun 2017,  9:41 PM</time>
         
       </p>
     
     
-      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/06/14/the-first-post-of-my-blog/" itemprop="url">The First Post of My Blog</a></h2>
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/06/14/cantorzhan-kai-,-quan-pai-lie-wen-ti-,-mo-ban-wen-ti-javashi-xian/" itemprop="url">Cantor展开、全排列问题、魔板问题(JAVA实现)</a></h2>
     
   </header>
 
 
-  <div class="entry-content clearfix" itemprop="articleBody description"><h3>This is the content</h3>
+  <div class="entry-content clearfix" itemprop="articleBody description"><h1>Cantor展开、全排列问题、魔板问题（JAVA实现）</h1>
 
-<blockquote><p>1
-2
-3</p></blockquote>
+<p>本文由全排列问题的递归和非递归写法入手，引出Cantor展开的公式及其应用，最后讨论Cantor数的经典应用之魔板问题</p>
+
+<ul>
+<li><strong>全排列问题</strong></li>
+<li><strong>Cantor展开</strong></li>
+<li><strong>魔板问题</strong></li>
+</ul>
+
+
+<hr />
+
+<h2>目录</h2>
+
+<p>[TOC]</p>
+
+<h2>问题：给定字符串S[0…N-1]，设计算法，枚举S的全排列</h2>
+
+<p>以一个简单的示例来表示解题过程
+示例 枚举0123的全排列
+0123 0132 0213 0231 0312 0321
+1023 1032 1203 1230 1302 1320
+2013 2031 2103 2130 2301 2310
+3012 3021 3102 3120 3201 3210
+手动写出这些序列的时候，实际上是脑补了一个树形结构，如下：
+<img src="http://img.blog.csdn.net/20170220113519218?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述" />
+画出这个树的过程实际上是一个深度搜索的过程，每次到达叶子节点时就产生一个输出，之后再回溯，搜索下一个叶子节点。
+深度搜索的过程实际上就是一个入栈出栈的过程，也就是一个递归过程。</p>
+
+<h3>全排列之递归解法</h3>
+
+<p>使用递归时，代码结构是很清晰，也容易理解，便不再赘述，直接上代码。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//无重复的全排列递归写法
+</span><span class='line'>public class Permutation {
+</span><span class='line'>  public static final int N = 4;
+</span><span class='line'>  public static void main(String[] args){
+</span><span class='line'>      //初始化
+</span><span class='line'>      int[] sequence = new int[N];
+</span><span class='line'>      for(int i = 0;i &lt; N;i++){
+</span><span class='line'>          sequence[i] = i+1;
+</span><span class='line'>      }
+</span><span class='line'>      permutation(sequence,N,0);
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static void print(int[] sequence){
+</span><span class='line'>      for(int i : sequence){
+</span><span class='line'>          System.out.print(i);
+</span><span class='line'>      }
+</span><span class='line'>      System.out.println();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static void swap(int[] sequence,int i, int j){
+</span><span class='line'>      int tmp = sequence[i];
+</span><span class='line'>      sequence[i] = sequence[j];
+</span><span class='line'>      sequence[j] = tmp;
+</span><span class='line'>  }
+</span><span class='line'>  //固定前n位的全排列
+</span><span class='line'>  public static void permutation(int[] sequence, int size, int n){
+</span><span class='line'>      if(n == size - 1) print(sequence);
+</span><span class='line'>      
+</span><span class='line'>      for(int i = n; i &lt; size;i++){
+</span><span class='line'>          //用其他位来交换第n位
+</span><span class='line'>          swap(sequence,i,n);
+</span><span class='line'>          permutation(sequence,size,n+1);
+</span><span class='line'>          swap(sequence,i,n);
+</span><span class='line'>      }
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>当出现重复元素时，在用其他位交换第n位时，会有相同的两个位均与n位发生了交换。所以我们需要在交换时判断该位是否在之前已经被放置到n位过。
+为了判断某个元素是否已经被访问过，另增加一个duplication数组。
+与无重复元素的序列全排列相比，仅在permutation函数中增加了一个参数及两行代码。
+代码如下</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//有重复的递归写法
+</span><span class='line'>public class PermutationWithDuplicate {
+</span><span class='line'>  public static final int N = 4;
+</span><span class='line'>  
+</span><span class='line'>  public static void main(String[] args){
+</span><span class='line'>      //初始化
+</span><span class='line'>      int[] sequence = {1,2,3,4};
+</span><span class='line'>      boolean[] duplication = new boolean[N];
+</span><span class='line'>      permutation(duplication,sequence,N,0);
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static void print(int[] sequence){
+</span><span class='line'>      for(int i : sequence){
+</span><span class='line'>          System.out.print(i);
+</span><span class='line'>      }
+</span><span class='line'>      System.out.println();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static void swap(int[] sequence,int i, int j){
+</span><span class='line'>      int tmp = sequence[i];
+</span><span class='line'>      sequence[i] = sequence[j];
+</span><span class='line'>      sequence[j] = tmp;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public static void permutation(boolean[] duplication,int[] sequence,int size,int n){
+</span><span class='line'>      
+</span><span class='line'>      //遍历每一根隐式树时，duplication的状态应该是要刷新的
+</span><span class='line'>      //所以duplication不能作为全局变量，这样会导致所有递归状态共用一个duplication
+</span><span class='line'>      
+</span><span class='line'>      //如果作为局部变量，那么每次调用permutation都需要重新创建这个数组，并且这个数组不会被全部访问到，耗费了时间和空间
+</span><span class='line'>      //所以作为参数在递归状态间传递，注意在回溯时需要恢复第n位，以及duplication数组。
+</span><span class='line'>      //因为非基本数据类型的参数都是传址引用，如果不恢复duplication的值，那么会导致所有递归状态共用一个duplication
+</span><span class='line'>//        boolean[] duplication = new boolean[N];
+</span><span class='line'>      if(n == size-1){
+</span><span class='line'>          print(sequence);
+</span><span class='line'>      }
+</span><span class='line'>      for(int i = n;i &lt; size;i++){
+</span><span class='line'>          if(!duplication[(sequence[i]%N)]){
+</span><span class='line'>              duplication[(sequence[i]%N)] = true;
+</span><span class='line'>              swap(sequence,i,n);
+</span><span class='line'>              permutation(duplication,sequence,size,n+1);
+</span><span class='line'>              swap(sequence,i,n);
+</span><span class='line'>              duplication[(sequence[i]%N)] = false;
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>全排列之非递归解法</h3>
+
+<p>如果是对1234字符串，枚举其所有排列。相当于就是把由1、2、3、4构成的数字全部列举出来。既要列举，自然有个顺序，不妨从小到大列举。
+1234 1243 1324 1342 1423 1432
+2134 2143 2314 2341 2413 2431
+3124 3142 3214 3241 3412 3421
+4123 4132 4213 4231 4312 4321</p>
+
+<p>每一次迭代，我们都希望获取比当前的序列稍大的序列。而比当前的序列稍大的序列仅仅只与当前的序列相关，也就是通过当前的permutation，我们能立刻得到next permutation.了解了这个原理后，程序的框架便出来了。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>while(hasNextPermutation){
+</span><span class='line'>  getNextPermutation();
+</span><span class='line'>  print;
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到，当某个序列从首位到末位是依次递减时，是不可能再增大的。
+反之，当某个序列的低位比高位大时，可以将低位和高位交换，交换后，将此高位后的所有位数重新按次序排列得到新的序列。举例来讲，比如1342，从末位2往前遍历，4比3大，将4与3交换变为1432，再将4后面的32按从小到大的次序变为23，最后得到next permutation为1423。
+代码如下：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class NextPermutation {
+</span><span class='line'>  public static final int N = 4;
+</span><span class='line'>  public static void main(String[] args){
+</span><span class='line'>      //初始化
+</span><span class='line'>      int[] sequence = new int[N];
+</span><span class='line'>      for(int i = 0;i &lt; N;i++){
+</span><span class='line'>          sequence[i] = i+1;
+</span><span class='line'>      }
+</span><span class='line'>      permutation(sequence);
+</span><span class='line'>  }
+</span><span class='line'>  public static void permutation(int[] sequence){
+</span><span class='line'>      print(sequence);
+</span><span class='line'>      int[] tmp = getNextPermutation(sequence);
+</span><span class='line'>      while(null != tmp){
+</span><span class='line'>          print(tmp);
+</span><span class='line'>          tmp = getNextPermutation(tmp);
+</span><span class='line'>      }
+</span><span class='line'>  }
+</span><span class='line'>  private static void print(int[] sequence){
+</span><span class='line'>      for(int i : sequence){
+</span><span class='line'>          System.out.print(i);
+</span><span class='line'>      }
+</span><span class='line'>      System.out.println();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static void swap(int[] sequence,int i, int j){
+</span><span class='line'>      int tmp = sequence[i];
+</span><span class='line'>      sequence[i] = sequence[j];
+</span><span class='line'>      sequence[j] = tmp;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public static int[] getNextPermutation(int[] sequence){
+</span><span class='line'>      int scriptOfNeedSwap = 0;
+</span><span class='line'>      int i;
+</span><span class='line'>      //从后往前找
+</span><span class='line'>      for(i = N - 1;i &gt;= 1;i--){
+</span><span class='line'>          if(sequence[i] &gt; sequence[i-1]){
+</span><span class='line'>              scriptOfNeedSwap = i - 1;
+</span><span class='line'>              break;
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      if(i == 0) return null;
+</span><span class='line'>      //找到第一个递减的位置，交换
+</span><span class='line'>      for(i = N - 1;i &gt; scriptOfNeedSwap;i-- ){
+</span><span class='line'>          if(sequence[i] &gt; sequence[scriptOfNeedSwap]){
+</span><span class='line'>              swap(sequence,i,scriptOfNeedSwap);
+</span><span class='line'>              break;
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>      //可以看到一个规律，交换之后后面的几位均是降序的，此时只需要对其进行翻转即可
+</span><span class='line'>      //翻转
+</span><span class='line'>      for(i = N-1;i &gt; scriptOfNeedSwap;i--){
+</span><span class='line'>          swap(sequence,i,++scriptOfNeedSwap);
+</span><span class='line'>          if(i &lt;= scriptOfNeedSwap) break;
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      return sequence;
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>本解法对于有重复元素的序列是完全适用的，按从小到大的顺序将序列打印出来，天然就能达到去重的目的。</p>
+
+<h2>问题：如何计算N个无重复元素的某个排列是第几个排列</h2>
+
+<p>如何求解这个问题。很自然的想到，使用从小到大的顺序枚举出一个数列的所有排列，直到匹配目标排列。
+然而Cantor展开使用公式解决了这个问题。</p>
+
+<h3>Cantor展开</h3>
+
+<p>关于Cantor展开的原理这里不作详细介绍。Cantor展开的公式为：</p>
+
+<blockquote><p>X=an<em>(n-1)!+an-1</em>(n-2)!+&hellip;+ai<em>(i-1)!+&hellip;+a2</em>1!+a1*0!</p></blockquote>
+
+<p>使用示例来帮助理解利用Cantor展开如何求解本问题。
+假如序列s=[“A”,”B”,”C”,”D”]
+需要求序列s'=[“D”,”A”,”B”,”C”]是序列s的全排列中的第几个排列，记作X(s');</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>X(s’) =    3（在序列DABC中有3个比D小）*3!+
+</span><span class='line'>          0（在剩下的序列ABC中有0个比A小）*2！+
+</span><span class='line'>          0（在剩下的序列BC中有0个比B小）*1！+
+</span><span class='line'>          0（在剩下的序列C中有0个比C小）*0！
+</span><span class='line'>  =18</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那么序列s’是s的全排列中第18个排列（从0开始计数）；
+同理可以根据s算第18个排列序列。</p>
+
+<blockquote><p>总结：康托展开是一个全排列到一个自然数的一一映射</p></blockquote>
+
+<h2>魔板问题</h2>
+
+<p>在下面对求解魔板问题的过程中应用了隐式树的思想以及Cantor展开。
+问题描述：
+在魔方风靡全球之后不久，Rubik先生发明了它的简化版――魔板。魔板 由8个同样大小的方块组成，每个方块颜色均不相同，可用数字1-8分别表示。任一时刻魔板的状态可用方块的颜色序列表示：从魔板的左上角开始，按顺时针方 向依次写下各方块的颜色代号，所得到的数字序列即可表示此时魔板的状态。例如，序列(1,2,3,4,5,6,7,8)表示魔板状态为：
+　　1 2 3 4
+　　8 7 6 5
+　　对于魔板，可施加三种不同的操作，具体操作方法如下：
+　　A: 上下两行互换,如上图可变换为状态87654321
+　　B: 每行同时循环右移一格,如上图可变换为41236785
+　　C: 中间4个方块顺时针旋转一格,如上图可变换为17245368
+　　给你魔板的初始状态与目标状态，请给出由初态到目态变换数最少的变换步骤，若有多种变换方案则取字典序最小的那种。</p>
+
+<p>在杭电的OJ上有这样一个题，读者可以作为练习。<a href="http://acm.split.hdu.edu.cn/showproblem.php?pid=1430">题目链接</a></p>
+
+<h3>解题思路</h3>
+
+<p> 魔板的每一种状态，实际上是序列12345678的一种全排列，最多可以有8!=40320种状态。
+ <strong>而魔板问题则是求解状态x最快可以经过多少个状态到达状态y。</strong>
+ 我们也可以脑补出一棵三叉树，编号为1的状态经过A,B,C三种行为到达状态2,3,4。2,3,4再分别经过A,B,C三种行为扩展出更多的状态。
+与最开始的全排列问题不同的是，在遍历这棵树的时候，我们采用的是广度优先搜索的方法，将这棵树做层次遍历，从根节点出发，到达某个节点所需要的最少的变换次数则是这个节点所在的层数。所以，当做广度优先搜索遍历，找到第一个满足条件的状态时，程序就可以返回了。
+确定了广度优先搜索的算法，便可以确定数据结构采用先入先出的队列了。每扩展出新的节点，便将这些新的节点加入到队列中，等待被取出后再度扩展。
+在遍历过程中，我们可以考虑做一些优化。</p>
+
+<ul>
+<li>判重。判断某个节点的状态是否已经遍历过，若已经遍历过，则无需再扩展此节点</li>
+<li>剪枝。 AA，BBBB，CCCC这样的变换路径都是没有必要的，会变回原本的状态</li>
+</ul>
+
+
+<p>由Cantor展开，可以将魔板的每一钟状态映射为一个自然数，这就可以作为判重的依据。而计算Cantor数需要计算阶乘，对阶乘进行优化也是必须的，可以用一个hash数组将需要计算的阶乘事先保存下来。</p>
+
+<p>具体代码如下：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class MoBanProblem {
+</span><span class='line'>  static int[] hash = {1,1,2,6,24,120,720,5040};
+</span><span class='line'>  public static void main(String args[]){
+</span><span class='line'>      String number = "12345678";
+</span><span class='line'>      String end = "34512678";
+</span><span class='line'>      String rs = null;
+</span><span class='line'>      number = preProcess(number);
+</span><span class='line'>      end = preProcess(end);
+</span><span class='line'>      rs = bfs(number,end);
+</span><span class='line'>      if(rs != null){
+</span><span class='line'>          System.out.println(rs);
+</span><span class='line'>      }else{
+</span><span class='line'>          System.out.println("无法变换");
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      
+</span><span class='line'>  }
+</span><span class='line'>  //由于输入的字符串与魔板上字符的顺序不一致，所以需要对数据进行预处理，将后四位翻转
+</span><span class='line'>  private static String preProcess(String number){
+</span><span class='line'>      return number.substring(0,4)+number.substring(7,8)+number.substring(6,7)+number.substring(5,6)+number.substring(4,5);
+</span><span class='line'>  }
+</span><span class='line'>  //上下两行互换
+</span><span class='line'>  public static String fun_A(String number){
+</span><span class='line'>      String a = number.substring(4,8) + number.substring(0,4);
+</span><span class='line'>      return a;
+</span><span class='line'>  }
+</span><span class='line'>  //每行同时循环右移一格
+</span><span class='line'>  public static String fun_B(String number){
+</span><span class='line'>      String a = number.substring(3,4)+number.substring(0,3)+number.substring(7,8)+number.substring(4,7);
+</span><span class='line'>      return a;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  //中间四个方块顺时针旋转一格
+</span><span class='line'>  public static String fun_C(String number){
+</span><span class='line'>      String a = number.substring(0,1)+number.substring(5,6)+number.substring(1,2)+number.substring(3,4)+
+</span><span class='line'>              number.substring(4,5)+number.substring(6,7)+number.substring(2,3)+number.substring(7,8);
+</span><span class='line'>      return a;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  private static int getA(String status,int i){
+</span><span class='line'>      int rs = 0;
+</span><span class='line'>      for(int k = i+1;k &lt; status.length();k++){
+</span><span class='line'>          if(status.charAt(k) &lt; status.charAt(i)){
+</span><span class='line'>              rs++;
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>      return rs;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  
+</span><span class='line'>  //计算当前状态的cantor序号
+</span><span class='line'>  public static int cantor(String status){
+</span><span class='line'>      int[] a = new int[8];
+</span><span class='line'>      int rs = 0;
+</span><span class='line'>      for(int i = 0, j = 7;i &lt; status.length();i++,j--){
+</span><span class='line'>          a[j] = getA(status,i);
+</span><span class='line'>      }
+</span><span class='line'>      for(int i = 7;i &gt;= 0;i--){
+</span><span class='line'>          rs += a[i]*hash[i];
+</span><span class='line'>      }
+</span><span class='line'>      return rs;
+</span><span class='line'>  
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  
+</span><span class='line'>  public static boolean matches(String a,String b){
+</span><span class='line'>      if(a.length() != b.length()) return false;
+</span><span class='line'>      if(a.equals(b)) return true;
+</span><span class='line'>      else  return false;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  
+</span><span class='line'>  public static String bfs(String start,String end){
+</span><span class='line'>      //某个序列状态是否已被搜索过
+</span><span class='line'>      boolean[] visited = new boolean[40320];
+</span><span class='line'>      String[] ans = new String[40320];
+</span><span class='line'>      Queue&lt;String&gt; status = new Queue&lt;String&gt;();
+</span><span class='line'>      status.enqueue(start);
+</span><span class='line'>      while(!status.isEmpty()){
+</span><span class='line'>          String tmp = status.dequeue();
+</span><span class='line'>          if(matches(tmp,end)){
+</span><span class='line'>              return ans[cantor(tmp)];
+</span><span class='line'>          }
+</span><span class='line'>          if(!visited[cantor(tmp)]){
+</span><span class='line'>              if(ans[cantor(tmp)] == null) ans[cantor(tmp)] = "";
+</span><span class='line'>              if(ans[cantor(tmp)] == "" || ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-1,ans[cantor(tmp)].length()) != "A"){
+</span><span class='line'>                  String fun_A_tmp = fun_A(tmp);
+</span><span class='line'>                  status.enqueue(fun_A_tmp);
+</span><span class='line'>                  ans[cantor(fun_A_tmp)] = ans[cantor(tmp)] + "A";
+</span><span class='line'>              }
+</span><span class='line'>              if(ans[cantor(tmp)].length() &lt; 3 ||ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-3,ans[cantor(tmp)].length()) != "BBB"){
+</span><span class='line'>                  String fun_B_tmp = fun_B(tmp);
+</span><span class='line'>                  status.enqueue(fun_B_tmp);
+</span><span class='line'>                  ans[cantor(fun_B_tmp)] = ans[cantor(tmp)] + "B";
+</span><span class='line'>              }
+</span><span class='line'>              if(ans[cantor(tmp)].length() &lt; 3 ||ans[cantor(tmp)].substring(ans[cantor(tmp)].length()-3,ans[cantor(tmp)].length()) != "CCC"){
+</span><span class='line'>                  String fun_C_tmp = fun_C(tmp);
+</span><span class='line'>                  status.enqueue(fun_C_tmp);
+</span><span class='line'>                  ans[cantor(fun_C_tmp)] = ans[cantor(tmp)] + "C";
+</span><span class='line'>              }
+</span><span class='line'>          }
+</span><span class='line'>          visited[cantor(tmp)] = true;
+</span><span class='line'>          
+</span><span class='line'>          
+</span><span class='line'>      }
+</span><span class='line'>      return null;
+</span><span class='line'>       
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<blockquote><p>总结：将全排列问题抽象为状态的枚举，将魔板问题抽象为状态的迁移是很关键的。Cantor展开将某个状态映射为某个自然数，在查找以及计数问题中可以起到很大的作用。</p></blockquote>
+
+<hr />
+
+<p><strong>头一次认真写博文</strong>
+<strong>谢谢阅读，欢迎指正~</strong>
+<strong>若有同类问题希望能帮忙补充。</strong></p>
+</div>
+  
+  
+
+
+        </article>
+      
+      
+        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-05-03T16:01:07+08:00"  data-updated="true" itemprop="datePublished dateCreated">Wed  3 May 2017,  4:01 PM</time>
+        
+      </p>
+    
+    
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/" itemprop="url">Netty入门之创建Maven多模块依赖项目</a></h2>
+    
+  </header>
+
+
+  <div class="entry-content clearfix" itemprop="articleBody description"><p>新学Netty，编译运行时踩了一些坑，记录在此。
+essential netty in action中有一个入门demo，EchoServer and EchoClient，用于Netty入门的小demo。
+<a href="https://waylau.gitbooks.io/essential-netty-in-action/content/index.html">(Essential Netty in Action)</a></p>
+
+<h3>EchoClient主要功能</h3>
+
+<p>1、启动客户端，发起连接</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class Client {
+</span><span class='line'>  private final String host;
+</span><span class='line'>  private final int port;
+</span><span class='line'>  
+</span><span class='line'>  public Client(String host, int port) {
+</span><span class='line'>      this.host = host;
+</span><span class='line'>      this.port = port;
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public void start() throws Exception {
+</span><span class='line'>      EventLoopGroup group = new NioEventLoopGroup();
+</span><span class='line'>      try{
+</span><span class='line'>          Bootstrap b = new Bootstrap();
+</span><span class='line'>          b.group(group)
+</span><span class='line'>              .channel(NioSocketChannel.class)
+</span><span class='line'>              .remoteAddress(new InetSocketAddress(host,port))
+</span><span class='line'>              .handler(new ChannelInitializer&lt;SocketChannel&gt;() {
+</span><span class='line'>              @Override
+</span><span class='line'>              public void initChannel(SocketChannel ch) 
+</span><span class='line'>                          throws Exception {
+</span><span class='line'>                  ch.pipeline().addLast(new ClientHandler());
+</span><span class='line'>              }
+</span><span class='line'>          });
+</span><span class='line'>          ChannelFuture f = b.connect().sync();
+</span><span class='line'>          
+</span><span class='line'>          f.channel().closeFuture().sync();
+</span><span class='line'>      }finally {
+</span><span class='line'>          group.shutdownGracefully().sync();
+</span><span class='line'>      }
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public static void main(String[] args) throws Exception {
+</span><span class='line'>      if(args.length != 2){
+</span><span class='line'>          System.err.println(
+</span><span class='line'>                  "Usage :" + Client.class.getSimpleName()+
+</span><span class='line'>                  "&lt;host&gt;&lt;port&gt;"
+</span><span class='line'>                  );
+</span><span class='line'>          return;
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      final String host = args[0];
+</span><span class='line'>      final int port = Integer.parseInt(args[1]);
+</span><span class='line'>      
+</span><span class='line'>      new Client(host,port).start();
+</span><span class='line'>  }
+</span><span class='line'>
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>2、ClientHandler处理返回到客户端的数据</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>class ClientHandler extends SimpleChannelInboundHandler&lt;ByteBuf&gt;{
+</span><span class='line'>
+</span><span class='line'>  @Override
+</span><span class='line'>  public void channelActive(ChannelHandlerContext ctx){
+</span><span class='line'>      ctx.writeAndFlush(Unpooled.copiedBuffer("Netty rocks!",CharsetUtil.UTF_8));
+</span><span class='line'>  }
+</span><span class='line'>  @Override
+</span><span class='line'>  protected void channelRead0(ChannelHandlerContext ctx, ByteBuf in) throws Exception {
+</span><span class='line'>      System.out.println("Client received: "+in.toString(CharsetUtil.UTF_8)); 
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  @Override
+</span><span class='line'>  public void exceptionCaught(ChannelHandlerContext ctx,
+</span><span class='line'>                  Throwable cause) {
+</span><span class='line'>      cause.printStackTrace();
+</span><span class='line'>      ctx.close();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>
+</span><span class='line'>}
+</span><span class='line'>
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>EchoServer主要功能</h3>
+
+<p>1、启动服务端，监听连接请求</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class EchoServer {
+</span><span class='line'>  public void bind(int port) throws Exception {
+</span><span class='line'>      //配置服务端的NIO线程组
+</span><span class='line'>      //实际上EventLoopGroup就是Reactor线程组
+</span><span class='line'>      //两个Reactor一个用于服务端接收客户端的连接，另一个用于进行SocketChannel的网络读写
+</span><span class='line'>      EventLoopGroup bossGroup = new NioEventLoopGroup();
+</span><span class='line'>      EventLoopGroup workerGroup = new NioEventLoopGroup();
+</span><span class='line'>      
+</span><span class='line'>      try{
+</span><span class='line'>          /**
+</span><span class='line'>           * 由于我们使用在 NIO 传输，我们
+</span><span class='line'>              已指定 NioEventLoopGroup接受和处理新连接，指定 NioServerSocketChannel
+</span><span class='line'>              为信道类型。在此之后，我们设置本地地址是 InetSocketAddress 与所选择的端口（6）如。
+</span><span class='line'>              服务器将绑定到此地址来监听新的连接请求。
+</span><span class='line'>           */
+</span><span class='line'>          //ServerBootstrap对象是Netty用于启动NIO服务端的辅助启动类，目的是降低服务端开发的复杂度
+</span><span class='line'>          ServerBootstrap b = new ServerBootstrap();
+</span><span class='line'>          //Set the EventLoopGroup for the parent (acceptor) and the child (client). 
+</span><span class='line'>          b.group(bossGroup, workerGroup)
+</span><span class='line'>              .channel(NioServerSocketChannel.class)
+</span><span class='line'>              .localAddress(new InetSocketAddress(port))
+</span><span class='line'>              //绑定I/O事件的处理类ChildChannelHandler,作用类似于Reactor模式中的Handler类
+</span><span class='line'>              //主要用于处理网络I/O事件，例如记录日志，对消息进行编解码等
+</span><span class='line'>              .childHandler(new ChannelInitializer&lt;SocketChannel&gt;(){
+</span><span class='line'>              //添加ServerHandler到Channel的ChannelPipeline
+</span><span class='line'>                  //通过ServerHandler给每一个新来的Channel初始化
+</span><span class='line'>                  @Override
+</span><span class='line'>                  protected void initChannel(SocketChannel ch) throws Exception {
+</span><span class='line'>                      ch.pipeline().addLast(new ServerHandler());
+</span><span class='line'>                  }
+</span><span class='line'>              });
+</span><span class='line'>          //绑定监听端口，调用sync同步阻塞方法等待绑定操作完成，完成后返回ChannelFuture类似于JDK中Future
+</span><span class='line'>          ChannelFuture f = b.bind(port).sync();
+</span><span class='line'>          //使用sync方法进行阻塞，等待服务端链路关闭之后Main函数才退出
+</span><span class='line'>          f.channel().closeFuture().sync();
+</span><span class='line'>      }finally {
+</span><span class='line'>          //优雅退出，释放线程池资源
+</span><span class='line'>          bossGroup.shutdownGracefully();
+</span><span class='line'>          workerGroup.shutdownGracefully();
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      
+</span><span class='line'>  }
+</span><span class='line'>  public static void main(String[] args) throws Exception {
+</span><span class='line'>      int port = 8080;
+</span><span class='line'>      if(args != null && args.length &gt; 0) {
+</span><span class='line'>          try {
+</span><span class='line'>              port = Integer.valueOf(args[0]);
+</span><span class='line'>          }catch (NumberFormatException e) {
+</span><span class='line'>              //采用默认值
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>      new Server().bind(port);
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>2、ServerHandler处理发送到服务端的数据</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>private class ServerHandler extends ChannelInboundHandlerAdapter {
+</span><span class='line'>      
+</span><span class='line'>      //每个信息入站都会调用
+</span><span class='line'>      @Override
+</span><span class='line'>      public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+</span><span class='line'>          ByteBuf buf = (ByteBuf) msg;
+</span><span class='line'>          System.out.println("The server receive msg :" + buf.toString());
+</span><span class='line'>          ctx.write(buf);
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      //通知处理器最后的channelread()是当前批处理中的最后一条消息时调用
+</span><span class='line'>      @Override
+</span><span class='line'>      public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
+</span><span class='line'>          ctx.flush();
+</span><span class='line'>      }
+</span><span class='line'>      
+</span><span class='line'>      //读操作时捕获到异常时调用
+</span><span class='line'>      @Override
+</span><span class='line'>      public void exceptionCaught (ChannelHandlerContext ctx, Throwable cause) {
+</span><span class='line'>          ctx.close();
+</span><span class='line'>      }
+</span><span class='line'>  }</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>在Eclipse中使用maven构建该demo</h3>
+
+<p>首先分析该项目中的模块及其依赖关系。
+这个项目中有两个模块，Server与Client，它们的依赖库相同，互相之间没有依赖关系。
+1、创建包含这两个模块的父项目netty-parent，pom.xml文件配置</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+</span><span class='line'>  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+</span><span class='line'>  &lt;groupId&gt;netty&lt;/groupId&gt;
+</span><span class='line'>  &lt;artifactId&gt;netty-parent&lt;/artifactId&gt;
+</span><span class='line'>  &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+</span><span class='line'>  &lt;name&gt;netty-parent&lt;/name&gt;
+</span><span class='line'>  &lt;!--父项目必须包含该标签--&gt;
+</span><span class='line'>  &lt;packaging&gt;pom&lt;/packaging&gt;
+</span><span class='line'>  &lt;!-- 引入netty依赖--&gt;
+</span><span class='line'>   &lt;dependencies&gt;
+</span><span class='line'>       &lt;dependency&gt;
+</span><span class='line'>           &lt;groupId&gt;junit&lt;/groupId&gt;
+</span><span class='line'>           &lt;artifactId&gt;junit&lt;/artifactId&gt;
+</span><span class='line'>           &lt;version&gt;4.10&lt;/version&gt;
+</span><span class='line'>           &lt;scope&gt;test&lt;/scope&gt;
+</span><span class='line'>       &lt;/dependency&gt;
+</span><span class='line'>       &lt;dependency&gt;
+</span><span class='line'>           &lt;groupId&gt;org.slf4j&lt;/groupId&gt;
+</span><span class='line'>           &lt;artifactId&gt;slf4j-simple&lt;/artifactId&gt;
+</span><span class='line'>           &lt;version&gt;1.6.4&lt;/version&gt;
+</span><span class='line'>           &lt;scope&gt;compile&lt;/scope&gt;
+</span><span class='line'>       &lt;/dependency&gt;
+</span><span class='line'>       &lt;dependency&gt;
+</span><span class='line'>         &lt;groupId&gt;io.netty&lt;/groupId&gt;
+</span><span class='line'>         &lt;artifactId&gt;netty-all&lt;/artifactId&gt; &lt;!-- Use 'netty-all' for 4.0 or above --&gt;
+</span><span class='line'>           &lt;version&gt;4.1.10.Final&lt;/version&gt;
+</span><span class='line'>           &lt;scope&gt;compile&lt;/scope&gt;
+</span><span class='line'>         &lt;/dependency&gt;
+</span><span class='line'>       
+</span><span class='line'>   &lt;/dependencies&gt;
+</span><span class='line'>  &lt;/project&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>2、以netty-parent为parent project创建新的maven module，分别为netty-client和netty-server，创建完毕之后工程结构如图所示
+<img src="http://img.blog.csdn.net/20170503152931631?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述" />
+3、netty-server的pom.xml文件配置为</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+</span><span class='line'>  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+</span><span class='line'>  &lt;!--在eclipse中创建module时自动生成--&gt;
+</span><span class='line'>  &lt;parent&gt;
+</span><span class='line'>    &lt;groupId&gt;netty&lt;/groupId&gt;
+</span><span class='line'>    &lt;artifactId&gt;netty-parent&lt;/artifactId&gt;
+</span><span class='line'>    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+</span><span class='line'>  &lt;/parent&gt;
+</span><span class='line'>  &lt;artifactId&gt;netty-server&lt;/artifactId&gt;
+</span><span class='line'>  &lt;!--子module的打包形式--&gt;
+</span><span class='line'>  &lt;packaging&gt;jar&lt;/packaging&gt;
+</span><span class='line'>  &lt;name&gt;netty-server&lt;/name&gt;
+</span><span class='line'>&lt;/project&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>4、netty-client的pom.xml文件配置为</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>&lt;project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"&gt;
+</span><span class='line'>  &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
+</span><span class='line'>  &lt;parent&gt;
+</span><span class='line'>    &lt;groupId&gt;netty&lt;/groupId&gt;
+</span><span class='line'>    &lt;artifactId&gt;netty-parent&lt;/artifactId&gt;
+</span><span class='line'>    &lt;version&gt;0.0.1-SNAPSHOT&lt;/version&gt;
+</span><span class='line'>  &lt;/parent&gt;
+</span><span class='line'>  &lt;artifactId&gt;netty-client&lt;/artifactId&gt;
+</span><span class='line'>  &lt;packaging&gt;jar&lt;/packaging&gt;
+</span><span class='line'>  &lt;name&gt;netty-client&lt;/name&gt;
+</span><span class='line'>&lt;/project&gt;</span></code></pre></td></tr></table></div></figure>
+
+
+<p>5、编译项目并运行Server和Client
+5.1  在命令行中进入netty-parent项目目录，运行命令编译项目</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\workspace\netty-parent&gt;mvn package
+</span><span class='line'>[INFO] Scanning for projects...
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Reactor Build Order:
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] netty-parent
+</span><span class='line'>[INFO] netty-client
+</span><span class='line'>[INFO] netty-server
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Building netty-parent 0.0.1-SNAPSHOT
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Building netty-client 0.0.1-SNAPSHOT
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>…………省略
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Building netty-server 0.0.1-SNAPSHOT
+</span><span class='line'>…………省略
+</span><span class='line'>[INFO] Reactor Summary:
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] netty-parent ....................................... SUCCESS [  0.002 s]
+</span><span class='line'>[INFO] netty-client ....................................... SUCCESS [  1.006 s]
+</span><span class='line'>[INFO] netty-server ....................................... SUCCESS [  0.501 s]
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] BUILD SUCCESS
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Total time: 1.603 s
+</span><span class='line'>[INFO] Finished at: 2017-05-03T15:37:41+08:00
+</span><span class='line'>[INFO] Final Memory: 16M/177M
+</span><span class='line'>[INFO] ------------------------------------------------------------------------</span></code></pre></td></tr></table></div></figure>
+
+
+<p>5.2 在命令行中进入netty-parent/netty-server目录，运行server</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\workspace\netty-parent\netty-server&gt;mvn exec:java -Dexec.mainClass="Server"
+</span><span class='line'>[WARNING]
+</span><span class='line'>[WARNING] Some problems were encountered while building the effective settings
+</span><span class='line'>[WARNING] expected START_TAG or END_TAG not TEXT (position: TEXT seen ...&lt;/local
+</span><span class='line'>Repository&gt;\ua0\n  &lt;o... @262:5)  @ D:\lyl\00-WORK\java&javaweb\tools\apache-mav
+</span><span class='line'>en-3.3.9\conf\settings.xml, line 262, column 5
+</span><span class='line'>[WARNING]
+</span><span class='line'>[INFO] Scanning for projects...
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Building netty-server 0.0.1-SNAPSHOT
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ netty-server ---
+</span></code></pre></td></tr></table></div></figure>
+
+
+<p>5.3 此时Server端已经运行起来了，再打开一个cmd命令窗口，在命令行中进入netty-parent/netty-client目录，运行client</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>D:\workspace\netty-parent\netty-client&gt;mvn exec:java -Dexec.mainClass="Client" -
+</span><span class='line'>Dexec.args="localhost 8080"
+</span><span class='line'>[WARNING]
+</span><span class='line'>[WARNING] Some problems were encountered while building the effective settings
+</span><span class='line'>[WARNING] expected START_TAG or END_TAG not TEXT (position: TEXT seen ...&lt;/local
+</span><span class='line'>Repository&gt;\ua0\n  &lt;o... @262:5)  @ D:\lyl\00-WORK\java&javaweb\tools\apache-mav
+</span><span class='line'>en-3.3.9\conf\settings.xml, line 262, column 5
+</span><span class='line'>[WARNING]
+</span><span class='line'>[INFO] Scanning for projects...
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO] Building netty-client 0.0.1-SNAPSHOT
+</span><span class='line'>[INFO] ------------------------------------------------------------------------
+</span><span class='line'>[INFO]
+</span><span class='line'>[INFO] --- exec-maven-plugin:1.6.0:java (default-cli) @ netty-client ---
+</span><span class='line'>Client received: Netty rocks!</span></code></pre></td></tr></table></div></figure>
+
+
+<p>与此同时，Server端的窗口也接收到了信息
+<img src="http://img.blog.csdn.net/20170503155007445?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="这里写图片描述" /></p>
+
+<p>到此，第一个netty demo运行完毕.
+注意mainClass，我demo里没有限定package名，所以mainClass=&ldquo;Client"。</p>
+
+<p><a href="https://github.com/banjiexiaoxian/EchoServerAndClient">项目github地址</a></p>
+</div>
+  
+  
+
+
+        </article>
+      
+      
+        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-03-20T18:18:51+08:00"  data-updated="true" itemprop="datePublished dateCreated">Mon 20 Mar 2017,  6:18 PM</time>
+        
+      </p>
+    
+    
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/" itemprop="url">HashMap源码学习笔记</a></h2>
+    
+  </header>
+
+
+  <div class="entry-content clearfix" itemprop="articleBody description"><p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
+本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
+
+<h3>源码中的doc</h3>
+
+<p>HashMap大致上跟HashTable相同，但是HashMap是非线程安全的，而且支持Null Key和Null Value.
+当有多个线程同时访问HashMap时，若其中存在线程对HashMap进行modify structurally（包括put、remove操作，不包括set、get操作），那么就需要考虑线程同步的HashMap，比如synchronizedMap或者concurrentHashMap。
+多线程访问导致HashMap发生死锁的一个案例见<a href="http://blog.csdn.net/liuyanling_cs/article/details/63276707">本博客另一篇博文</a>
+HashMap不能保证插入顺序.
+HashMap迭代遍历所有元素的时间复杂度与HashMap的capacity和size之和成正比，所以如果迭代的性能要求较高，就要考虑INITIAL_CAPACITY不能设置过高，LOAD_FACTOR不能设置过低。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//下面是Java HashMap中的默认值
+</span><span class='line'>/**
+</span><span class='line'> * The default initial capacity - MUST be a power of two.
+</span><span class='line'> */
+</span><span class='line'>static final int DEFAULT_INITIAL_CAPACITY = 16;
+</span><span class='line'>/**
+</span><span class='line'> * The load factor used when none specified in constructor.
+</span><span class='line'> */
+</span><span class='line'>static final float DEFAULT_LOAD_FACTOR = 0.75f;</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>HashMap的Size、Capacity、Load_Factor、Threshold说明 <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></h4>
+
+<p><img src="http://img.blog.csdn.net/20160407175503308" alt="一个典型的HashMap结构" />
+把HashMap抽象成多个用数组形式组织起来的bucket，每个bucket装着的是映射到同一个hashcode位置的KV们
+那么bucket的个数就是Capacity
+KV的个数就是Size
+Load_Factor就是装载因子，用来衡量HashMap的装载情况
+Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Threshold=Capacity<em>Load_Factor），则会对HashMap进行扩容（Capacity</em>2）并将现有元素重新插入到新的HashMap中。</p>
+
+<p>回归正题，理解了HashMap中这几个重要概念之后，就能理解为了良好的权衡时间和空间成本，LOAD_FACTOR的设置比较重要，过高会降低空间成本但增加查找成本，建议使用默认设置。
+另外，如果对HashMap中存储的KV对的数量有个比较准确的估计，那么需要合理的设置Capacity的值，尽量减少扩容和Rehash的情况发生。</p>
+
+<h3>HashMap底层的数据结构</h3>
+
+<p>这里有几个关键的类，一个是HashMap本身，还有一个是Entry。java优秀封装性的一个体现在于容器类，HashMap也是一个容器类，我们可以在里面装入各种类型的KV对，无论K,V本身的类型。这是通过将KV封装成了一个Entry类来做到的。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+</span><span class='line'>        final K key;
+</span><span class='line'>        V value;
+</span><span class='line'>        Entry&lt;K,V&gt; next;
+</span><span class='line'>        final int hash;
+</span><span class='line'>
+</span><span class='line'>        public final int hashCode() {
+</span><span class='line'>            return (key==null   ? 0 : key.hashCode()) ^
+</span><span class='line'>                   (value==null ? 0 : value.hashCode());
+</span><span class='line'>        }
+</span><span class='line'>
+</span><span class='line'>        public final String toString() {
+</span><span class='line'>            return getKey() + "=" + getValue();
+</span><span class='line'>        }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>HashMap在底层维护了一个数组table，来存放这些Entry。
+我们关注一下所有Entry都有一个属性为next，这是为了解决IndexFor冲突问题，在每一个table元素的位置实际上引入了一个链表结构，所有映射成相同Index的Entry将通过next指针组织放在同一条链表中。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> public HashMap() {
+</span><span class='line'>        this.loadFactor = DEFAULT_LOAD_FACTOR;
+</span><span class='line'>        threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+</span><span class='line'>        table = new Entry[DEFAULT_INITIAL_CAPACITY];
+</span><span class='line'>        init();
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>HashMap中的插入和查找操作</h3>
+
+<p>先从put函数说起</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/**
+</span><span class='line'>    put操作
+</span><span class='line'>     */
+</span><span class='line'>    public V put(K key, V value) {
+</span><span class='line'>        if (key == null)
+</span><span class='line'>        //由于HashMap支持Key为Null,所以需要单独考虑Key为Null的情况
+</span><span class='line'>            return putForNullKey(value);
+</span><span class='line'>        //key本身是一个对象，但key对象的hashCode生成方法该对象自带的，可能是jdk定义的，也可能是用户自定义的，是不可控的，可能是比较差的hash函数，所以需要再进行一次hash，根据这个二次hash值来定位应该把当前Entry放到HashMap的第i个bucket中    
+</span><span class='line'>        int hash = hash(key.hashCode());
+</span><span class='line'>        int i = indexFor(hash, table.length);
+</span><span class='line'>        
+</span><span class='line'>        //将该Entry插入第i个bucket维护的链表结尾
+</span><span class='line'>        for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {
+</span><span class='line'>            Object k;
+</span><span class='line'>            //如果该Entry已存在，返回旧值
+</span><span class='line'>            if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
+</span><span class='line'>                V oldValue = e.value;
+</span><span class='line'>                e.value = value;
+</span><span class='line'>                e.recordAccess(this);
+</span><span class='line'>                return oldValue;
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>  //如果是新插入的Entry,将HashMap的版本码++，并将该Entry加入到链表结尾
+</span><span class='line'>        modCount++;
+</span><span class='line'>        addEntry(hash, key, value, i);
+</span><span class='line'>        return null;
+</span><span class='line'>    }
+</span><span class='line'>  
+</span><span class='line'>    void addEntry(int hash, K key, V value, int bucketIndex) {
+</span><span class='line'>      Entry&lt;K,V&gt; e = table[bucketIndex];
+</span><span class='line'>          table[bucketIndex] = new Entry&lt;K,V&gt;(hash, key, value, e);
+</span><span class='line'>          //在插入时会判断是否需要扩容
+</span><span class='line'>          if (size++ &gt;= threshold)
+</span><span class='line'>              resize(2 * table.length);
+</span><span class='line'>      }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在put的过程中，有两个很重要的函数需要理解一下，分别是hash和indexfor。
+hash的作用在前文已说明，是为了防御Key对象拥有的可能性能较差的hash函数。
+当我们拥有了一个Key的hashCode，如何根据这个hashCode将这个Entry映射到数量为Capacity的某个bucket中去呢？
+hashCode是一个32位的Int数，可表示的大小从-2147483648到2147483648，如果HashMap能有这么大的容量，那么根据HashCode的性质，若Key不同，则根本不存在冲突的可能。
+当然不可能这么做。
+比较容易想到的方法是将hashCode根据数组长度来取模。
+然而取模运算比较低效，我们只需要达成一个目的，那就是hashCode会被映射为一个小于Capacity的值，并尽量均匀分布。具体做法见indexFor函数。
+indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了防止映射冲突，有两个trick<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>：
+1、Capacity需得是2的n次方幂；
+2、hash优化函数将HashCode的每个四位都做了一次异或，意在混合原始哈希码的各个部分，以此来加大低位的随机性</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/**
+</span><span class='line'>    HashMap中定义的Hash方法，Null始终被映射为0
+</span><span class='line'>     */
+</span><span class='line'>    static int hash(int h) {
+</span><span class='line'>        
+</span><span class='line'>        //java1.7
+</span><span class='line'>        h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);
+</span><span class='line'>        return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);
+</span><span class='line'>        //java1.8中简化了这个过程，具体见文末相关文章
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    /**
+</span><span class='line'>     * Returns index for hash code h.
+</span><span class='line'>     */
+</span><span class='line'>    static int indexFor(int h, int length) {
+</span><span class='line'>        return h & (length-1);
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>理解了put操作，get操作就简单了</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>
+</span><span class='line'>    public V get(Object key) {
+</span><span class='line'>        if (key == null)
+</span><span class='line'>            return getForNullKey();
+</span><span class='line'>        int hash = hash(key.hashCode());
+</span><span class='line'>        for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+</span><span class='line'>             e != null;
+</span><span class='line'>             e = e.next) {
+</span><span class='line'>            Object k;
+</span><span class='line'>            if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
+</span><span class='line'>                return e.value;
+</span><span class='line'>        }
+</span><span class='line'>        return null;
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h2>相关文章</h2>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p><a href="http://blog.csdn.net/fan2012huan/article/details/51087722"> HashMap中capacity、loadFactor、threshold、size等概念的解释 </a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p><a href="https://www.zhihu.com/question/20733617">知乎：JDK 源码中 HashMap 的 hash 方法原理是什么？</a><a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+  
+  
+
+
+        </article>
+      
+      
+        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-03-18T20:41:31+08:00"  data-updated="true" itemprop="datePublished dateCreated">Sat 18 Mar 2017,  8:41 PM</time>
+        
+      </p>
+    
+    
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/" itemprop="url">Java多线程之死锁情形（持续更新)</a></h2>
+    
+  </header>
+
+
+  <div class="entry-content clearfix" itemprop="articleBody description"><p>本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
+持续更新中</p>
+
+<h3>1、多生产者多消费者问题中由于所有角色共享一个同步锁而发生死锁  <a href="http://www.2cto.com/kf/201410/344213.html"><strong><em>来源链接</em></strong></a></h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package CreatorAndConsumer;
+</span><span class='line'> 
+</span><span class='line'>import java.util.ArrayList;
+</span><span class='line'>import java.util.List;
+</span><span class='line'> 
+</span><span class='line'>
+</span><span class='line'>//盘子，表示共享的资源，在Plate类中维护一个eggs列表
+</span><span class='line'>public class Plate {
+</span><span class='line'>    private List&lt;object&gt; eggs = new ArrayList&lt;object&gt;();
+</span><span class='line'>     
+</span><span class='line'>    /*
+</span><span class='line'>     * 获取蛋
+</span><span class='line'>     */
+</span><span class='line'>    public Object getEgg()
+</span><span class='line'>    {
+</span><span class='line'>        System.out.println("消费者取蛋");
+</span><span class='line'>        Object egg = eggs.get(0);
+</span><span class='line'>        eggs.remove(0);
+</span><span class='line'>        return egg;
+</span><span class='line'>    }
+</span><span class='line'>     
+</span><span class='line'>     
+</span><span class='line'>    /**
+</span><span class='line'>     * 加入蛋
+</span><span class='line'>     */
+</span><span class='line'>    public void addEgg(Object egg)
+</span><span class='line'>    {
+</span><span class='line'>        System.out.println("生产者生蛋");
+</span><span class='line'>        eggs.add(egg);
+</span><span class='line'>    }
+</span><span class='line'>     
+</span><span class='line'>    /**
+</span><span class='line'>     * 获取蛋个数
+</span><span class='line'>     */
+</span><span class='line'>    public int getEggNum()
+</span><span class='line'>    {
+</span><span class='line'>        return eggs.size();
+</span><span class='line'>    }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>接下来是消费者</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package CreatorAndConsumer;
+</span><span class='line'> 
+</span><span class='line'>public class Consumer implements Runnable {
+</span><span class='line'>    /**
+</span><span class='line'>     * 线程资源
+</span><span class='line'>     */
+</span><span class='line'>    private Plate plate;
+</span><span class='line'> 
+</span><span class='line'>    public Consumer(Plate plate) {
+</span><span class='line'>        this.plate = plate;
+</span><span class='line'>    }
+</span><span class='line'> 
+</span><span class='line'>    @Override
+</span><span class='line'>    public void run() {
+</span><span class='line'>        synchronized (plate) {//消费者获取锁
+</span><span class='line'>            
+</span><span class='line'>            while (plate.getEggNum() &lt; 1) {
+</span><span class='line'>                try {
+</span><span class='line'>                    // 如果蛋不够，消费者需要等待，进入wait，便会释放持有的锁，但不能保证是生产者获得了这个锁。进入wait之后需要等待其它线程的notify或者notifyAll唤醒
+</span><span class='line'>                    plate.wait();
+</span><span class='line'>                } catch (InterruptedException e) {
+</span><span class='line'>                    e.printStackTrace();
+</span><span class='line'>                }
+</span><span class='line'>            }
+</span><span class='line'>            // 被唤醒后，再次持有锁，放心地取蛋
+</span><span class='line'>            plate.getEgg();
+</span><span class='line'>            //取完蛋后，唤醒其它等待的线程
+</span><span class='line'>            plate.notify();
+</span><span class='line'>        }
+</span><span class='line'>        //释放锁
+</span><span class='line'>    }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>之后是生产者</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>package CreatorAndConsumer;
+</span><span class='line'> 
+</span><span class='line'>/**
+</span><span class='line'> * 生产者
+</span><span class='line'> */
+</span><span class='line'>public class Creator implements Runnable {
+</span><span class='line'>    /**
+</span><span class='line'>     * 线程资源
+</span><span class='line'>     */
+</span><span class='line'>    private Plate plate;
+</span><span class='line'> 
+</span><span class='line'>    public Creator(Plate plate) {
+</span><span class='line'>        this.plate = plate;
+</span><span class='line'>    }
+</span><span class='line'> 
+</span><span class='line'>    @Override
+</span><span class='line'>    public void run() {
+</span><span class='line'>        synchronized (plate) {//生产者获取锁
+</span><span class='line'>            // 如果此时盘中的蛋已放不下时，进入wait，暂时释放锁。但不能保证该锁被消费者拿到。等待消费者消费egg后被唤醒
+</span><span class='line'>            while (plate.getEggNum() &gt;= 5) {
+</span><span class='line'>                try {
+</span><span class='line'>                    plate.wait();
+</span><span class='line'>                } catch (InterruptedException e) {
+</span><span class='line'>                    e.printStackTrace();
+</span><span class='line'>                }
+</span><span class='line'>            }
+</span><span class='line'>            // 唤醒后，生产蛋
+</span><span class='line'>            Object egg = new Object();
+</span><span class='line'>            plate.addEgg(egg);
+</span><span class='line'>            //生产了蛋之后唤醒其他线程
+</span><span class='line'>            plate.notify();
+</span><span class='line'>        }
+</span><span class='line'>        //释放锁
+</span><span class='line'>    }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>那么什么情况下，会出现死锁呢？
+举个栗子，当有多个生产者时，不能保证生产者释放的锁一定被消费者取得。若生产者释放的锁被另外一个生产者所取得，那么极可能出现两个生产者都进入wait之后，消费者才获取到锁，接着启动notify唤醒其中一个生产者。如此循环，另一个生产者可能总是处于wait状态。
+多个消费者时也同理。
+解决这个问题的思路是，生产者释放给消费者的锁不能被另一个生产者拿到。
+解决方案就是，增加一个给生产者专用的锁和给消费者专用的锁，保证每一次生产者需要释放锁给消费者时，其他的生产者都无法进入竞争环节。
+以消费者举例，修改后的代码如下：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class Consumer implements Runnable {
+</span><span class='line'>    /**
+</span><span class='line'>     * 线程资源
+</span><span class='line'>     */
+</span><span class='line'>    private Plate plate;
+</span><span class='line'> 
+</span><span class='line'>    /**
+</span><span class='line'>     * 消费者锁
+</span><span class='line'>     */
+</span><span class='line'>    private static Object consumerLocker = new Object();
+</span><span class='line'> 
+</span><span class='line'>    public Consumer(Plate plate) {
+</span><span class='line'>        this.plate = plate;
+</span><span class='line'>    }
+</span><span class='line'> 
+</span><span class='line'>    @Override
+</span><span class='line'>    public void run() {
+</span><span class='line'>        // 必须先获得消费者锁才能消费，限制只有一个消费者线程能进入竞争共享资源锁Plate的环节
+</span><span class='line'>        synchronized (consumerLocker) {
+</span><span class='line'>            synchronized (plate) {
+</span><span class='line'>                while (plate.getEggNum() &lt; 1) {
+</span><span class='line'>                    try {
+</span><span class='line'>                        plate.wait();
+</span><span class='line'>                    } catch (InterruptedException e) {
+</span><span class='line'>                        e.printStackTrace();
+</span><span class='line'>                    }
+</span><span class='line'>                }
+</span><span class='line'>                plate.getEgg();
+</span><span class='line'>                plate.notify();
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>2、并发下的HashMap Rehash导致死锁   <a href="https://github.com/oldratlee/fucking-java-concurrency"><strong><em>来源链接1</em></strong></a>  <a href="http://coolshell.cn/articles/9606.html"><strong><em>来源链接2</em></strong></a></h3>
+
+<h3>3、两个线程对两个共享资源加锁顺序不同导致死锁  <a href="https://github.com/oldratlee/fucking-java-concurrency"><strong><em>来源链接</em></strong></a></h3>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/**
+</span><span class='line'> * @author Jerry Lee (oldratlee at gmail dot com)
+</span><span class='line'> */
+</span><span class='line'>public class SymmetricLockDeadlockDemo {
+</span><span class='line'>    static final Object lock1 = new Object();
+</span><span class='line'>    static final Object lock2 = new Object();
+</span><span class='line'>
+</span><span class='line'>    public static void main(String[] args) throws Exception {
+</span><span class='line'>        Thread thread1 = new Thread(new ConcurrencyCheckTask1());
+</span><span class='line'>        thread1.start();
+</span><span class='line'>        Thread thread2 = new Thread(new ConcurrencyCheckTask2());
+</span><span class='line'>        thread2.start();
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    private static class ConcurrencyCheckTask1 implements Runnable {
+</span><span class='line'>        @Override
+</span><span class='line'>        public void run() {
+</span><span class='line'>            System.out.println("ConcurrencyCheckTask1 started!");
+</span><span class='line'>            while (true) {
+</span><span class='line'>                synchronized (lock1) {
+</span><span class='line'>                    synchronized (lock2) {
+</span><span class='line'>                        System.out.println("Hello1");
+</span><span class='line'>                    }
+</span><span class='line'>                }
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    private static class ConcurrencyCheckTask2 implements Runnable {
+</span><span class='line'>        @Override
+</span><span class='line'>        public void run() {
+</span><span class='line'>            System.out.println("ConcurrencyCheckTask2 started!");
+</span><span class='line'>            while (true) {
+</span><span class='line'>                synchronized (lock2) {
+</span><span class='line'>                    synchronized (lock1) {
+</span><span class='line'>                        System.out.println("Hello2");
+</span><span class='line'>                    }
+</span><span class='line'>                }
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>这个例子理解起来比较简单，多线程环境下，Thread1获得B锁，等待A锁，Thread2获得A锁，等待B锁，造成了死锁。</p>
+</div>
+  
+  
+
+
+        </article>
+      
+      
+        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-03-14T16:07:05+08:00"  data-updated="true" itemprop="datePublished dateCreated">Tue 14 Mar 2017,  4:07 PM</time>
+        
+      </p>
+    
+    
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/" itemprop="url">Java之单例模式的各种实现</a></h2>
+    
+  </header>
+
+
+  <div class="entry-content clearfix" itemprop="articleBody description"><p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
+先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
+
+<h2>饿汉式</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//无懒加载
+</span><span class='line'>//在类加载时初始化唯一的实例对象，由jvm在多线程环境时保证线程安全
+</span><span class='line'>//增加了初始化的时间和内存开销
+</span><span class='line'>public class SingleDog {
+</span><span class='line'>  private static final SingleDog instance = new SingleDog();
+</span><span class='line'>  
+</span><span class='line'>  private SingleDog(){}
+</span><span class='line'>  
+</span><span class='line'>  public SingleDog getInstance(){
+</span><span class='line'>      return instance;
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>懒汉式</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//懒加载
+</span><span class='line'>//因为实例化在getInstance里执行，所以每次访问instance，都需要获取同步锁，比较笨重；
+</span><span class='line'>public class SingleDog {
+</span><span class='line'>private static SingleDog instance = null;
+</span><span class='line'>
+</span><span class='line'>private SingleDog(){}
+</span><span class='line'>
+</span><span class='line'>synchronized public static SingleDog getInstance(){
+</span><span class='line'>  //判断是否需要对Instance进行初始化
+</span><span class='line'>  if(instance == null){
+</span><span class='line'>      instance = new SingleDog();
+</span><span class='line'>  }
+</span><span class='line'>  return instance;
+</span><span class='line'>  
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>懒汉式多线程环境下优化 之 双重检查锁定</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//懒加载(双重检查锁定)
+</span><span class='line'>//多线程访问时，只在可能需要对Instance进行初始化时获取锁，大多数时候直接读取Instance即可
+</span><span class='line'>public class SingleDog {
+</span><span class='line'>  //需用volatile关键字保证对这个变量所做的操作是所有线程可见的
+</span><span class='line'>  private volatile static SingleDog instance = null;
+</span><span class='line'>  
+</span><span class='line'>  private SingleDog(){}
+</span><span class='line'>  
+</span><span class='line'>  public static SingleDog getInstance(){
+</span><span class='line'>      //判断是否需要对Instance进行初始化
+</span><span class='line'>      if(instance == null){
+</span><span class='line'>          synchronized(SingleDog.class){
+</span><span class='line'>              //对于已经获取到锁的其他线程，再次判断Instance是否需要进行初始化
+</span><span class='line'>              if(instance == null){
+</span><span class='line'>                  instance = new SingleDog();
+</span><span class='line'>              }
+</span><span class='line'>          }
+</span><span class='line'>      }
+</span><span class='line'>      return instance;
+</span><span class='line'>      
+</span><span class='line'>  }
+</span><span class='line'>//双重检查锁定也不能避免使用重度锁synchronized，在获取和释放锁的过程中会有性能损耗；同时需要两个if判断来确保只有一个实例，程序逻辑比较复杂</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>懒汉式多线程环境下优化 之 静态内部类实现</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>
+</span><span class='line'>//与第一个饿汉式相比，使用一个私有静态内部类来代替SingleDog类，持有instance实例，达到了懒加载的目的。
+</span><span class='line'>//摆脱了重度锁synchronized
+</span><span class='line'>//那么多线程环境下一个类是否会被初始化多次呢？
+</span><span class='line'>//jvm在类加载时会确保线程的安全，如果多个线程去初始化一个类，只会有第一个线程被执行，其他线程都会被阻塞而且不会再次进入到类的初始化中去。同一个类加载器下，一个类只会被初始化一次
+</span><span class='line'>public class SingleDog {
+</span><span class='line'>  private SingleDog() {}
+</span><span class='line'>  
+</span><span class='line'>  private static class SingleHolder{
+</span><span class='line'>      private static SingleDog instance = new SingleDog();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public static SingleDog getInstance(){
+</span><span class='line'>      return SingleHolder.instance;
+</span><span class='line'>  }
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>有什么办法破坏上述单例模式</h2>
+
+<h3>反射</h3>
+
+<p>虽然构造函数已经被限定为private了，但是只要有构造函数存在，就可以通过Java反射机制获取到它，还能强制性的setAccessble，将其设定为可访问，从而利用构造函数再生成一个新的实例，破坏单例模式。部分代码如下：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> SingleDog s1 = SingleDog.getInstance();
+</span><span class='line'>  Class&lt;SingleDog&gt; cls = (Class&lt;SingleDog&gt;) s1.getClass();
+</span><span class='line'>  Constructor&lt;SingleDog&gt; cons = cls.getDeclaredConstructor(new Class[] {});
+</span><span class='line'>  cons .setAccessible(true);
+</span><span class='line'>  SingleDog s2 = cons.newInstance(new Object[] {});
+</span><span class='line'>  System.out.println(s1 == s2);//false</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>反序列化</h3>
+
+<p>当将Java对象序列化后，再反序列时，readObject方法会自动创建一个新的实例。天然破坏了被序列化对象的单例模式。
+不过这个问题很好解决，只需要在类中添加一个方法就行：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>public class SingleDog {
+</span><span class='line'>  private SingleDog() {}
+</span><span class='line'>  
+</span><span class='line'>  private static class SingleHolder{
+</span><span class='line'>      private static SingleDog instance = new SingleDog();
+</span><span class='line'>  }
+</span><span class='line'>  
+</span><span class='line'>  public static SingleDog getInstance(){
+</span><span class='line'>      return SingleHolder.instance;
+</span><span class='line'>  }
+</span><span class='line'>  //划重点！
+</span><span class='line'>  public Object readResolve() {
+</span><span class='line'>        return instance;
+</span><span class='line'>    }
+</span><span class='line'>}
+</span></code></pre></td></tr></table></div></figure>
+
+
+<h2>枚举实现单例模式</h2>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//枚举实现单例模式
+</span><span class='line'>//防反射、防反序列化、线程安全（实例在类初始化期间就已经创建）
+</span><span class='line'>//枚举类实际上是继承于java.lang.Enum的一个抽象类，所以是无法用反射获取到其构造方法的
+</span><span class='line'>enum SingleDog {
+</span><span class='line'>    INSTANCE;
+</span><span class='line'>  public static SingleDog getInstance() {
+</span><span class='line'>      return INSTANCE;      
+</span><span class='line'>  } 
+</span><span class='line'>}</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<p>相关文章：
+<a href="http://blog.jobbole.com/94074/">深度分析 Java 的枚举类型：枚举的线程安全性及序列化问题</a>
+<a href="http://blog.csdn.net/huangyuan_xuan/article/details/52193006"> 浅谈使用单元素的枚举类型实现单例模式 </a>
+<a href="http://www.th7.cn/Program/java/201511/682115.shtml">单例模式那些坑</a></p>
+</div>
+  
+  
+
+
+        </article>
+      
+      
+        <article class="post" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+          
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-02-21T22:44:13+08:00"  data-updated="true" itemprop="datePublished dateCreated">Tue 21 Feb 2017, 10:44 PM</time>
+        
+      </p>
+    
+    
+      <h2 class="entry-title" itemprop="name headline"><a href="/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/" itemprop="url">Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP</a></h2>
+    
+  </header>
+
+
+  <div class="entry-content clearfix" itemprop="articleBody description"><p>首先，Dijkstra算法与Floyd算法都是广度优先搜索的算法。都可以用来求单源点到其他所有点的最短路径。那么这两者的原理分别是怎样?彼此又有什么区别呢？</p>
+
+<h2>求此有向图中起点1到其他所有点的最短距离</h2>
+
+<p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Graph[3][3] = {0,5,6
+</span><span class='line'>              1000,0,1000
+</span><span class='line'>              1000,-2,0}</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="http://img.blog.csdn.net/20170221223145768?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="一个简单的有向图" /></p>
+
+<h3>Dijskra算法</h3>
+
+<p>采用Dijkstra算法，需要有一个源点集合u，一个参考点集合v，以及一个滚动dist数组，用于存储S点到达其他所有点的最短路径。
+如果需要记录最短路线，还需要配置一个pre数组，用来存储当前最短路径下Index序号的点的前驱节点。
+初始化时，u中只有源点s，其他点都在v中，dist数组是s到其他所有点的直接距离，若没有边连接则为无穷大（本例中1000表示无穷大）。</p>
+
+<blockquote><p>初始化状态：u={1},v={2,3},dist[]={0,5,6},pre[]={1,1,1},flag={0,1,1}</p></blockquote>
+
+<p>算法开始，遍历dist查找最小值，将该最小值对应的点添加到u中，并从v中删除。一种实现方式是采用flag数组,0表示在u中，1表示在v中。</p>
+
+<blockquote><p>中间状态1：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>接着需要更新dist数组，判断从起始点1到v中的点之间的路径上插入新加入的点2，路径是否能变得更短，也就是比较dist[j]和Graph[1][2]+dist[2]，然后使用较小值更新dist[j]，若dist[j]被更新，则将pre[j]修改为2.</p>
+
+<blockquote><p>中间状态2：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>然后循环上述步骤，判断在v中且dist最小的点，然后加入到u中。</p>
+
+<blockquote><p>中间状态3: u={1,2,3},v={},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,0}</p></blockquote>
+
+<p>此时发现v中已没有点，则结果被输出。</p>
+
+<p>很显然，这个结果是不对的，从1到2的最短路径应该是1->3->2，长度为4.  而不是1->2，长度为5</p>
+
+<p>这是因为按照Dijkstra的算法逻辑，是不能计算负权图的。
+Dijkstra算法本质上是贪心算法，下一条路径都是由当前更短的路径派生出来的更长的路径。<strong>不存在回溯的过程。</strong>
+如果权值存在负数，那么被派生出来的可能是更短的路径，这就需要过程可以回溯，之前的路径需要被更短的路径替换掉，而Dijkstra算法是不能回溯的。它每一步都是以当前最优选择为前提的。</p>
+
+<h3>Floyd算法</h3>
+
+<p>那么，Floyd算法会怎么做呢？Floyd算法实际上是一个动态规划算法。
+每一个点对u和v之间的最短路径，可能会经过N个点，这些中间点记为k。
+假定u到k之间的最短路径已经找好，k到v之间的最短路径已经找好，那么求u到v之间的最短路径，就是遍历各个可能的k点，然后求(u,k)+(k,v)之间的最小值。
+所以这实际上将大规模的问题自顶向下划分为了小规模的问题，这就是动态规划思想。</p>
+
+<p>那么算法的步骤是怎样的呢？
+需要使用三层循环：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>for(u){
+</span><span class='line'>       for(v){
+</span><span class='line'>               for(k)}}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>若graph[u][k]+graph[k][v] &lt; graph[u][v],则更新graph[u][v]。并记录以当前u为起点的情况下此点的前驱。
+当三层遍历完毕之后，所有点对之间的最短路径长度和路径就能求出来了。当然，如果只需要求某个点到其他所有点的最短距离，那么固定u，也就是说只用两层遍历就可以做到了。
+最后的矩阵为</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>{0,4,6
+</span><span class='line'>1000,0,1000
+</span><span class='line'>998,-2,0}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到，求得的最短路径及其长度均是正确的。
+这是因为动态规划是可以回溯的，会遍历到从1到3再从3到2的路径。</p>
+
+<h2>总结</h2>
+
+<p>上述算法均为两种经典算法的最简单形式，没有任何优化。比如Floyd可以从空间复杂度上进行优化，Dijkstra在选择v中dist最小值时可以使用堆排序等。</p>
+
+<p>本文意在引出一个关于贪心算法和动态规划算法之间区别与联系的论述。（出自邹博老师）
+考虑一阶马尔科夫模型，状态N仅仅可以从状态N-1得到，就像有限状态自动机，这就是正确使用贪心算法的前提。
+考虑高阶马尔科夫模型，状态N可能需要前面的状态N-1,N-2,N-3等等一起联合才能得到。这就是正确使用动态规划的前提。
+<strong>所以一定能用贪心算法解的问题肯定可以由动态规划解。但是可以用动态规划来解的问题，不一定能用贪心算法来解。</strong></p>
+
+<p>使用马尔科夫模型来类比动态规划思想的这个观点还有很多启发思维的地方。
+比如说在构建状态转移方程时，经常因为使用的状态不对，而列不出最终的状态转移方程。
+简单的状态转移方程，只需要考虑一个状态x的变化，而复杂的状态转移方程可能需要考虑x、y或者更多的状态迁移。那么如何找准这些影响最终结果的状态，并找准状态和结果之间的对应关系，是列好状态转移方程的一个重点。</p>
 </div>
   
   

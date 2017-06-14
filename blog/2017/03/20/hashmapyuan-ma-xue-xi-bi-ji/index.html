@@ -1,0 +1,546 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>HashMap源码学习笔记 - Spencer's blog</title>
+  <meta name="author" content="Spencer">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Spencer's blog" type="application/atom+xml">
+
+  <!-- http://opengraphprotocol.org/ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/">
+  <meta property="og:title" content="HashMap源码学习笔记 - Spencer's blog">
+  
+
+  <script src="/javascripts/libs/jquery/jquery-2.1.3.min.js"></script>
+
+<link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+  
+  <link href="/stylesheets/screen.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+  <body   >
+    <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+    <div id="wrap">
+      
+        <header role="banner">
+          <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" title="toggle navbar" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Spencer's blog</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li ><a href="https://github.com/banjiexiaoxian">Projects</a></li>
+<li ><a href="/blog/archives">Archives</a></li>
+<li ><a href="#">About</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="navbar-form navbar-right" action="https://www.google.com/search" method="GET">
+                    <input type="hidden" name="sitesearch" value="spencer.me">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+        </header>
+      
+      <div id="main" role="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content" itemscope itemtype="http://schema.org/Blog">
+    <meta itemprop="name" content="Spencer's blog" />
+    
+    <meta itemprop="url" content="http://spencer.me" />
+    <article class="hentry" role="article" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-03-20T18:18:51+08:00"  data-updated="true" itemprop="datePublished dateCreated">Mon 20 Mar 2017,  6:18 PM</time>
+        
+      </p>
+    
+    
+    <h1 class="entry-title" itemprop="name headline">
+        HashMap源码学习笔记
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix" itemprop="articleBody description"><p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
+本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
+
+<h3>源码中的doc</h3>
+
+<p>HashMap大致上跟HashTable相同，但是HashMap是非线程安全的，而且支持Null Key和Null Value.
+当有多个线程同时访问HashMap时，若其中存在线程对HashMap进行modify structurally（包括put、remove操作，不包括set、get操作），那么就需要考虑线程同步的HashMap，比如synchronizedMap或者concurrentHashMap。
+多线程访问导致HashMap发生死锁的一个案例见<a href="http://blog.csdn.net/liuyanling_cs/article/details/63276707">本博客另一篇博文</a>
+HashMap不能保证插入顺序.
+HashMap迭代遍历所有元素的时间复杂度与HashMap的capacity和size之和成正比，所以如果迭代的性能要求较高，就要考虑INITIAL_CAPACITY不能设置过高，LOAD_FACTOR不能设置过低。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>//下面是Java HashMap中的默认值
+</span><span class='line'>/**
+</span><span class='line'> * The default initial capacity - MUST be a power of two.
+</span><span class='line'> */
+</span><span class='line'>static final int DEFAULT_INITIAL_CAPACITY = 16;
+</span><span class='line'>/**
+</span><span class='line'> * The load factor used when none specified in constructor.
+</span><span class='line'> */
+</span><span class='line'>static final float DEFAULT_LOAD_FACTOR = 0.75f;</span></code></pre></td></tr></table></div></figure>
+
+
+<h4>HashMap的Size、Capacity、Load_Factor、Threshold说明 <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></h4>
+
+<p><img src="http://img.blog.csdn.net/20160407175503308" alt="一个典型的HashMap结构" />
+把HashMap抽象成多个用数组形式组织起来的bucket，每个bucket装着的是映射到同一个hashcode位置的KV们
+那么bucket的个数就是Capacity
+KV的个数就是Size
+Load_Factor就是装载因子，用来衡量HashMap的装载情况
+Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Threshold=Capacity<em>Load_Factor），则会对HashMap进行扩容（Capacity</em>2）并将现有元素重新插入到新的HashMap中。</p>
+
+<p>回归正题，理解了HashMap中这几个重要概念之后，就能理解为了良好的权衡时间和空间成本，LOAD_FACTOR的设置比较重要，过高会降低空间成本但增加查找成本，建议使用默认设置。
+另外，如果对HashMap中存储的KV对的数量有个比较准确的估计，那么需要合理的设置Capacity的值，尽量减少扩容和Rehash的情况发生。</p>
+
+<h3>HashMap底层的数据结构</h3>
+
+<p>这里有几个关键的类，一个是HashMap本身，还有一个是Entry。java优秀封装性的一个体现在于容器类，HashMap也是一个容器类，我们可以在里面装入各种类型的KV对，无论K,V本身的类型。这是通过将KV封装成了一个Entry类来做到的。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+</span><span class='line'>        final K key;
+</span><span class='line'>        V value;
+</span><span class='line'>        Entry&lt;K,V&gt; next;
+</span><span class='line'>        final int hash;
+</span><span class='line'>
+</span><span class='line'>        public final int hashCode() {
+</span><span class='line'>            return (key==null   ? 0 : key.hashCode()) ^
+</span><span class='line'>                   (value==null ? 0 : value.hashCode());
+</span><span class='line'>        }
+</span><span class='line'>
+</span><span class='line'>        public final String toString() {
+</span><span class='line'>            return getKey() + "=" + getValue();
+</span><span class='line'>        }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>HashMap在底层维护了一个数组table，来存放这些Entry。
+我们关注一下所有Entry都有一个属性为next，这是为了解决IndexFor冲突问题，在每一个table元素的位置实际上引入了一个链表结构，所有映射成相同Index的Entry将通过next指针组织放在同一条链表中。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'> public HashMap() {
+</span><span class='line'>        this.loadFactor = DEFAULT_LOAD_FACTOR;
+</span><span class='line'>        threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+</span><span class='line'>        table = new Entry[DEFAULT_INITIAL_CAPACITY];
+</span><span class='line'>        init();
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<h3>HashMap中的插入和查找操作</h3>
+
+<p>先从put函数说起</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/**
+</span><span class='line'>    put操作
+</span><span class='line'>     */
+</span><span class='line'>    public V put(K key, V value) {
+</span><span class='line'>        if (key == null)
+</span><span class='line'>        //由于HashMap支持Key为Null,所以需要单独考虑Key为Null的情况
+</span><span class='line'>            return putForNullKey(value);
+</span><span class='line'>        //key本身是一个对象，但key对象的hashCode生成方法该对象自带的，可能是jdk定义的，也可能是用户自定义的，是不可控的，可能是比较差的hash函数，所以需要再进行一次hash，根据这个二次hash值来定位应该把当前Entry放到HashMap的第i个bucket中    
+</span><span class='line'>        int hash = hash(key.hashCode());
+</span><span class='line'>        int i = indexFor(hash, table.length);
+</span><span class='line'>        
+</span><span class='line'>        //将该Entry插入第i个bucket维护的链表结尾
+</span><span class='line'>        for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {
+</span><span class='line'>            Object k;
+</span><span class='line'>            //如果该Entry已存在，返回旧值
+</span><span class='line'>            if (e.hash == hash && ((k = e.key) == key || key.equals(k))) {
+</span><span class='line'>                V oldValue = e.value;
+</span><span class='line'>                e.value = value;
+</span><span class='line'>                e.recordAccess(this);
+</span><span class='line'>                return oldValue;
+</span><span class='line'>            }
+</span><span class='line'>        }
+</span><span class='line'>  //如果是新插入的Entry,将HashMap的版本码++，并将该Entry加入到链表结尾
+</span><span class='line'>        modCount++;
+</span><span class='line'>        addEntry(hash, key, value, i);
+</span><span class='line'>        return null;
+</span><span class='line'>    }
+</span><span class='line'>  
+</span><span class='line'>    void addEntry(int hash, K key, V value, int bucketIndex) {
+</span><span class='line'>      Entry&lt;K,V&gt; e = table[bucketIndex];
+</span><span class='line'>          table[bucketIndex] = new Entry&lt;K,V&gt;(hash, key, value, e);
+</span><span class='line'>          //在插入时会判断是否需要扩容
+</span><span class='line'>          if (size++ &gt;= threshold)
+</span><span class='line'>              resize(2 * table.length);
+</span><span class='line'>      }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>在put的过程中，有两个很重要的函数需要理解一下，分别是hash和indexfor。
+hash的作用在前文已说明，是为了防御Key对象拥有的可能性能较差的hash函数。
+当我们拥有了一个Key的hashCode，如何根据这个hashCode将这个Entry映射到数量为Capacity的某个bucket中去呢？
+hashCode是一个32位的Int数，可表示的大小从-2147483648到2147483648，如果HashMap能有这么大的容量，那么根据HashCode的性质，若Key不同，则根本不存在冲突的可能。
+当然不可能这么做。
+比较容易想到的方法是将hashCode根据数组长度来取模。
+然而取模运算比较低效，我们只需要达成一个目的，那就是hashCode会被映射为一个小于Capacity的值，并尽量均匀分布。具体做法见indexFor函数。
+indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了防止映射冲突，有两个trick<sup id="fnref:2"><a href="#fn:2" rel="footnote">2</a></sup>：
+1、Capacity需得是2的n次方幂；
+2、hash优化函数将HashCode的每个四位都做了一次异或，意在混合原始哈希码的各个部分，以此来加大低位的随机性</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/**
+</span><span class='line'>    HashMap中定义的Hash方法，Null始终被映射为0
+</span><span class='line'>     */
+</span><span class='line'>    static int hash(int h) {
+</span><span class='line'>        
+</span><span class='line'>        //java1.7
+</span><span class='line'>        h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);
+</span><span class='line'>        return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);
+</span><span class='line'>        //java1.8中简化了这个过程，具体见文末相关文章
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    /**
+</span><span class='line'>     * Returns index for hash code h.
+</span><span class='line'>     */
+</span><span class='line'>    static int indexFor(int h, int length) {
+</span><span class='line'>        return h & (length-1);
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<p>理解了put操作，get操作就简单了</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>
+</span><span class='line'>    public V get(Object key) {
+</span><span class='line'>        if (key == null)
+</span><span class='line'>            return getForNullKey();
+</span><span class='line'>        int hash = hash(key.hashCode());
+</span><span class='line'>        for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+</span><span class='line'>             e != null;
+</span><span class='line'>             e = e.next) {
+</span><span class='line'>            Object k;
+</span><span class='line'>            if (e.hash == hash && ((k = e.key) == key || key.equals(k)))
+</span><span class='line'>                return e.value;
+</span><span class='line'>        }
+</span><span class='line'>        return null;
+</span><span class='line'>    }</span></code></pre></td></tr></table></div></figure>
+
+
+<hr />
+
+<h2>相关文章</h2>
+<div class="footnotes">
+<hr/>
+<ol>
+<li id="fn:1">
+<p><a href="http://blog.csdn.net/fan2012huan/article/details/51087722"> HashMap中capacity、loadFactor、threshold、size等概念的解释 </a><a href="#fnref:1" rev="footnote">&#8617;</a></p></li>
+<li id="fn:2">
+<p><a href="https://www.zhihu.com/question/20733617">知乎：JDK 源码中 HashMap 的 hash 方法原理是什么？</a><a href="#fnref:2" rev="footnote">&#8617;</a></p></li>
+</ol>
+</div>
+
+</div>
+
+
+      <footer class="post-footer">
+        <p class="meta text-muted">
+          
+  
+
+
+
+<figure class="author-image">
+    <span class="img" href="/about" style="background-image: url(/images/avatar.jpg)"><span class="hidden">Picture</span></span>
+</figure>
+
+<section class="author">
+    <h4><span class="byline author vcard" itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="fn" itemprop="name">Spencer</span></span></h4>
+
+    <div class="author-meta">
+        <span class="author-link icon-link"><i class="fa fa-link" aria-hidden="true"></i> <a href="http://spencer.me">http://spencer.me</a></span>
+    </div>
+</section>
+
+<hr>
+
+<section class="share">
+    
+    <h4>Share this post</h4>
+    
+    <a class="fa fa-twitter" href="https://twitter.com/intent/tweet?url=http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/;" 
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="fa fa-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="fa fa-google-plus" href="https://plus.google.com/share?url=http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+    
+</section>
+
+
+
+
+<!--
+<footer class="post-footer">
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Instant%20Movie%20Streamer%20v3%20Release&amp;url=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+
+        </footer>
+
+
+-->
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-03-20T18:18:51+08:00"  data-updated="true" itemprop="datePublished dateCreated">Mon 20 Mar 2017,  6:18 PM</time>
+          <br>
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/jdk/'>jdk</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="pager">
+            
+            
+              
+                <a href="/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/" class="col-xs-12 col-md-4 btn btn-default" title="Previous Post: Java多线程之死锁情形（持续更新)"> 
+                  <div class="text-muted">
+                    <small>Previous Post</small>
+                  </div>
+                  <div class="pager-title">
+                    <h4>Java多线程之死锁情形（持续更新)</h4>
+                  </div>
+                </a>
+              
+            
+            
+            
+              
+              <a href="/blog/2017/05/03/nettyru-men-zhi-chuang-jian-mavenduo-mo-kuai-yi-lai-xiang-mu/" class="col-xs-12 col-md-4 btn btn-default pull-right" title="Next Post: Netty入门之创建Maven多模块依赖项目">
+                <div class="text-muted">
+                  <small>Next Post</small>
+                </div>
+                <div class="pager-title">
+                  <h4>Netty入门之创建Maven多模块依赖项目</h4>
+                </div>
+              </a>
+              
+            
+            
+          </div>
+        
+      </footer>
+    </article>
+    
+  </div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2017 - Spencer<br>
+  <small>
+      <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>,
+      <span class="credit">customized with <a href="https://github.com/bhrigu123/abacus">abacus theme</a></span>.
+  </small>
+</p>
+
+</div>
+</footer>
+    
+
+
+
+
+
+
+
+
+<script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr.js"></script>
+
+
+  </body>
+</html>

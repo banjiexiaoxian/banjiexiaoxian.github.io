@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html class="no-js" lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP - Spencer's blog</title>
+  <meta name="author" content="Spencer">
+
+  
+  
+
+  <!-- http://t.co/dKP3o1e -->
+  <meta name="HandheldFriendly" content="True">
+  <meta name="MobileOptimized" content="320">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  
+  <link rel="canonical" href="http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/">
+  <link href="/favicon.png" type="image/png" rel="icon">
+  <link href="/atom.xml" rel="alternate" title="Spencer's blog" type="application/atom+xml">
+
+  <!-- http://opengraphprotocol.org/ -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/">
+  <meta property="og:title" content="Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP - Spencer's blog">
+  
+
+  <script src="/javascripts/libs/jquery/jquery-2.1.3.min.js"></script>
+
+<link href="/assets/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" type="text/css">
+<link href="/assets/bootstrap/dist/css/bootstrap-theme.min.css" rel="stylesheet" type="text/css">
+
+<link rel="stylesheet" type="text/css" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
+
+
+  
+  <link href="/stylesheets/screen.css" media="screen, projection, print" rel="stylesheet" type="text/css">
+
+  
+
+</head>
+
+  <body   >
+    <a href="#content" class="sr-only sr-only-focusable">Skip to main content</a>
+    <div id="wrap">
+      
+        <header role="banner">
+          <nav class="navbar navbar-default" role="navigation">
+    <div class="container">
+        <div class="navbar-header">
+            <button type="button" class="navbar-toggle" title="toggle navbar" data-toggle="collapse" data-target=".navbar-collapse">
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+                <span class="icon-bar"></span>
+            </button>
+            <a class="navbar-brand" href="/">Spencer's blog</a>
+        </div>
+
+        <div class="navbar-collapse collapse">
+            <ul class="nav navbar-nav">
+                <li ><a href="https://github.com/banjiexiaoxian">Projects</a></li>
+<li ><a href="/blog/archives">Archives</a></li>
+<li ><a href="#">About</a></li>
+
+            </ul>
+            <ul class="nav navbar-nav navbar-right">
+                <li>
+                    <a class="subscribe-rss" href="/atom.xml" title="subscribe via RSS">
+                        <span class="visible-xs">RSS</span>
+                        <img class="hidden-xs" src="/images/rss.png" alt="RSS">
+                    </a>
+                </li>
+                
+            </ul>
+            
+                <form class="navbar-form navbar-right" action="https://www.google.com/search" method="GET">
+                    <input type="hidden" name="sitesearch" value="spencer.me">
+                    <div class="form-group">
+                        <input class="form-control" type="text" name="q" placeholder="Search">
+                    </div>
+                </form>
+            
+        </div>
+    </div>
+</nav>
+
+
+        </header>
+      
+      <div id="main" role="main" class="container">
+        <div id="content">
+          <div class="row">
+  <div class="page-content" itemscope itemtype="http://schema.org/Blog">
+    <meta itemprop="name" content="Spencer's blog" />
+    
+    <meta itemprop="url" content="http://spencer.me" />
+    <article class="hentry" role="article" itemprop="blogPost" itemscope itemtype="http://schema.org/BlogPosting">
+      
+  <header class="page-header">
+    
+      <p class="meta text-muted text-uppercase">
+        
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-02-21T22:44:13+08:00"  data-updated="true" itemprop="datePublished dateCreated">Tue 21 Feb 2017, 10:44 PM</time>
+        
+      </p>
+    
+    
+    <h1 class="entry-title" itemprop="name headline">
+        Dijkstra算法、Floyd算法的区别与联系，并由此谈到greedy和DP
+        
+    </h1>
+    
+  </header>
+
+
+<div class="entry-content clearfix" itemprop="articleBody description"><p>首先，Dijkstra算法与Floyd算法都是广度优先搜索的算法。都可以用来求单源点到其他所有点的最短路径。那么这两者的原理分别是怎样?彼此又有什么区别呢？</p>
+
+<h2>求此有向图中起点1到其他所有点的最短距离</h2>
+
+<p>在本文中，我们以一个小小的包含3个节点的有向图和邻接矩阵Graph来进行说明。</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>Graph[3][3] = {0,5,6
+</span><span class='line'>              1000,0,1000
+</span><span class='line'>              1000,-2,0}</span></code></pre></td></tr></table></div></figure>
+
+
+<p><img src="http://img.blog.csdn.net/20170221223145768?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQvbGl1eWFubGluZ19jcw==/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/SouthEast" alt="一个简单的有向图" /></p>
+
+<h3>Dijskra算法</h3>
+
+<p>采用Dijkstra算法，需要有一个源点集合u，一个参考点集合v，以及一个滚动dist数组，用于存储S点到达其他所有点的最短路径。
+如果需要记录最短路线，还需要配置一个pre数组，用来存储当前最短路径下Index序号的点的前驱节点。
+初始化时，u中只有源点s，其他点都在v中，dist数组是s到其他所有点的直接距离，若没有边连接则为无穷大（本例中1000表示无穷大）。</p>
+
+<blockquote><p>初始化状态：u={1},v={2,3},dist[]={0,5,6},pre[]={1,1,1},flag={0,1,1}</p></blockquote>
+
+<p>算法开始，遍历dist查找最小值，将该最小值对应的点添加到u中，并从v中删除。一种实现方式是采用flag数组,0表示在u中，1表示在v中。</p>
+
+<blockquote><p>中间状态1：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>接着需要更新dist数组，判断从起始点1到v中的点之间的路径上插入新加入的点2，路径是否能变得更短，也就是比较dist[j]和Graph[1][2]+dist[2]，然后使用较小值更新dist[j]，若dist[j]被更新，则将pre[j]修改为2.</p>
+
+<blockquote><p>中间状态2：u={1,2},v={3},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,1}</p></blockquote>
+
+<p>然后循环上述步骤，判断在v中且dist最小的点，然后加入到u中。</p>
+
+<blockquote><p>中间状态3: u={1,2,3},v={},dist[]={0,5,6},pre[]={1,1,1},flag={0,0,0}</p></blockquote>
+
+<p>此时发现v中已没有点，则结果被输出。</p>
+
+<p>很显然，这个结果是不对的，从1到2的最短路径应该是1->3->2，长度为4.  而不是1->2，长度为5</p>
+
+<p>这是因为按照Dijkstra的算法逻辑，是不能计算负权图的。
+Dijkstra算法本质上是贪心算法，下一条路径都是由当前更短的路径派生出来的更长的路径。<strong>不存在回溯的过程。</strong>
+如果权值存在负数，那么被派生出来的可能是更短的路径，这就需要过程可以回溯，之前的路径需要被更短的路径替换掉，而Dijkstra算法是不能回溯的。它每一步都是以当前最优选择为前提的。</p>
+
+<h3>Floyd算法</h3>
+
+<p>那么，Floyd算法会怎么做呢？Floyd算法实际上是一个动态规划算法。
+每一个点对u和v之间的最短路径，可能会经过N个点，这些中间点记为k。
+假定u到k之间的最短路径已经找好，k到v之间的最短路径已经找好，那么求u到v之间的最短路径，就是遍历各个可能的k点，然后求(u,k)+(k,v)之间的最小值。
+所以这实际上将大规模的问题自顶向下划分为了小规模的问题，这就是动态规划思想。</p>
+
+<p>那么算法的步骤是怎样的呢？
+需要使用三层循环：</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>for(u){
+</span><span class='line'>       for(v){
+</span><span class='line'>               for(k)}}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>若graph[u][k]+graph[k][v] &lt; graph[u][v],则更新graph[u][v]。并记录以当前u为起点的情况下此点的前驱。
+当三层遍历完毕之后，所有点对之间的最短路径长度和路径就能求出来了。当然，如果只需要求某个点到其他所有点的最短距离，那么固定u，也就是说只用两层遍历就可以做到了。
+最后的矩阵为</p>
+
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>{0,4,6
+</span><span class='line'>1000,0,1000
+</span><span class='line'>998,-2,0}</span></code></pre></td></tr></table></div></figure>
+
+
+<p>可以看到，求得的最短路径及其长度均是正确的。
+这是因为动态规划是可以回溯的，会遍历到从1到3再从3到2的路径。</p>
+
+<h2>总结</h2>
+
+<p>上述算法均为两种经典算法的最简单形式，没有任何优化。比如Floyd可以从空间复杂度上进行优化，Dijkstra在选择v中dist最小值时可以使用堆排序等。</p>
+
+<p>本文意在引出一个关于贪心算法和动态规划算法之间区别与联系的论述。（出自邹博老师）
+考虑一阶马尔科夫模型，状态N仅仅可以从状态N-1得到，就像有限状态自动机，这就是正确使用贪心算法的前提。
+考虑高阶马尔科夫模型，状态N可能需要前面的状态N-1,N-2,N-3等等一起联合才能得到。这就是正确使用动态规划的前提。
+<strong>所以一定能用贪心算法解的问题肯定可以由动态规划解。但是可以用动态规划来解的问题，不一定能用贪心算法来解。</strong></p>
+
+<p>使用马尔科夫模型来类比动态规划思想的这个观点还有很多启发思维的地方。
+比如说在构建状态转移方程时，经常因为使用的状态不对，而列不出最终的状态转移方程。
+简单的状态转移方程，只需要考虑一个状态x的变化，而复杂的状态转移方程可能需要考虑x、y或者更多的状态迁移。那么如何找准这些影响最终结果的状态，并找准状态和结果之间的对应关系，是列好状态转移方程的一个重点。</p>
+</div>
+
+
+      <footer class="post-footer">
+        <p class="meta text-muted">
+          
+  
+
+
+
+<figure class="author-image">
+    <span class="img" href="/about" style="background-image: url(/images/avatar.jpg)"><span class="hidden">Picture</span></span>
+</figure>
+
+<section class="author">
+    <h4><span class="byline author vcard" itemprop="author" itemscope itemtype="http://schema.org/Person"><span class="fn" itemprop="name">Spencer</span></span></h4>
+
+    <div class="author-meta">
+        <span class="author-link icon-link"><i class="fa fa-link" aria-hidden="true"></i> <a href="http://spencer.me">http://spencer.me</a></span>
+    </div>
+</section>
+
+<hr>
+
+<section class="share">
+    
+    <h4>Share this post</h4>
+    
+    <a class="fa fa-twitter" href="https://twitter.com/intent/tweet?url=http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/;" 
+        onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+        <span class="hidden">Twitter</span>
+    </a>
+    <a class="fa fa-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+        <span class="hidden">Facebook</span>
+    </a>
+    <a class="fa fa-google-plus" href="https://plus.google.com/share?url=http://spencer.me/blog/2017/02/21/dijkstrasuan-fa-,-floydsuan-fa-de-qu-bie-yu-lian-xi-,bing-you-ci-tan-dao-greedyhe-dp/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+        <span class="hidden">Google+</span>
+    </a>
+    
+</section>
+
+
+
+
+<!--
+<footer class="post-footer">
+
+
+            <section class="share">
+                <h4>Share this post</h4>
+                <a class="icon-twitter" href="https://twitter.com/intent/tweet?text=Instant%20Movie%20Streamer%20v3%20Release&amp;url=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'twitter-share', 'width=550,height=235');return false;">
+                    <span class="hidden">Twitter</span>
+                </a>
+                <a class="icon-facebook" href="https://www.facebook.com/sharer/sharer.php?u=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'facebook-share','width=580,height=296');return false;">
+                    <span class="hidden">Facebook</span>
+                </a>
+                <a class="icon-google-plus" href="https://plus.google.com/share?url=http://iyask.me/instant-movie-streamer-v3-release/" onclick="window.open(this.href, 'google-plus-share', 'width=490,height=530');return false;">
+                    <span class="hidden">Google+</span>
+                </a>
+            </section>
+
+
+        </footer>
+
+
+-->
+          
+
+
+
+
+
+
+
+
+
+
+
+
+<span class="glyphicon glyphicon-calendar"></span> <time datetime="2017-02-21T22:44:13+08:00"  data-updated="true" itemprop="datePublished dateCreated">Tue 21 Feb 2017, 10:44 PM</time>
+          <br>
+
+<span class="glyphicon glyphicon-tags"></span>&nbsp;
+<span class="categories">
+  
+    <a class='category' href='/blog/categories/algrothims/'>algrothims</a>
+  
+</span>
+
+
+        </p>
+        
+          <div class="pager">
+            
+            
+              
+              <a href="/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/" class="col-xs-12 col-md-4 btn btn-default pull-right" title="Next Post: Java之单例模式的各种实现">
+                <div class="text-muted">
+                  <small>Next Post</small>
+                </div>
+                <div class="pager-title">
+                  <h4>Java之单例模式的各种实现</h4>
+                </div>
+              </a>
+              
+            
+            
+          </div>
+        
+      </footer>
+    </article>
+    
+  </div>
+</div>
+
+        </div>
+      </div>
+    </div>
+    <footer role="contentinfo"><div class="container">
+    <p class="text-muted credits">
+  Copyright &copy; 2017 - Spencer<br>
+  <small>
+      <span class="credit">Powered by <a href="http://octopress.org">Octopress</a></span>,
+      <span class="credit">customized with <a href="https://github.com/bhrigu123/abacus">abacus theme</a></span>.
+  </small>
+</p>
+
+</div>
+</footer>
+    
+
+
+
+
+
+
+
+
+<script src="/assets/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="/javascripts/modernizr.js"></script>
+
+
+  </body>
+</html>

@@ -1,0 +1,717 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+
+  <title><![CDATA[Category: Jdk | Spencer's blog]]></title>
+  <link href="http://spencer.me/blog/categories/jdk/atom.xml" rel="self"/>
+  <link href="http://spencer.me/"/>
+  <updated>2017-06-14T22:01:00+08:00</updated>
+  <id>http://spencer.me/</id>
+  <author>
+    <name><![CDATA[Spencer]]></name>
+    
+  </author>
+  <generator uri="http://octopress.org/">Octopress</generator>
+
+  
+  <entry>
+    <title type="html"><![CDATA[HashMap源码学习笔记]]></title>
+    <link href="http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji/"/>
+    <updated>2017-03-20T18:18:51+08:00</updated>
+    <id>http://spencer.me/blog/2017/03/20/hashmapyuan-ma-xue-xi-bi-ji</id>
+    <content type="html"><![CDATA[<p>理解HashMap的关键，在于理解它底层的数据结构，查找、增加、删除元素的方法，为了理解这些方法，就需要理解Hash函数的原理，HashMap如何触发自动扩容，以及如何解决散列冲突。
+本文试图从上述几个关键问题说起来分享一下HashMap源码学习的过程。</p>
+
+<h3>源码中的doc</h3>
+
+<p>HashMap大致上跟HashTable相同，但是HashMap是非线程安全的，而且支持Null Key和Null Value.
+当有多个线程同时访问HashMap时，若其中存在线程对HashMap进行modify structurally（包括put、remove操作，不包括set、get操作），那么就需要考虑线程同步的HashMap，比如synchronizedMap或者concurrentHashMap。
+多线程访问导致HashMap发生死锁的一个案例见<a href="http://blog.csdn.net/liuyanling_cs/article/details/63276707">本博客另一篇博文</a>
+HashMap不能保证插入顺序.
+HashMap迭代遍历所有元素的时间复杂度与HashMap的capacity和size之和成正比，所以如果迭代的性能要求较高，就要考虑INITIAL_CAPACITY不能设置过高，LOAD_FACTOR不能设置过低。</p>
+
+<pre><code>    //下面是Java HashMap中的默认值
+    /**
+     * The default initial capacity - MUST be a power of two.
+     */
+    static final int DEFAULT_INITIAL_CAPACITY = 16;
+    /**
+     * The load factor used when none specified in constructor.
+     */
+    static final float DEFAULT_LOAD_FACTOR = 0.75f;
+</code></pre>
+
+<h4>HashMap的Size、Capacity、Load_Factor、Threshold说明 <sup id="fnref:1"><a href="#fn:1" rel="footnote">1</a></sup></h4>
+
+<p><img src="http://img.blog.csdn.net/20160407175503308" alt="一个典型的HashMap结构" />
+把HashMap抽象成多个用数组形式组织起来的bucket，每个bucket装着的是映射到同一个hashcode位置的KV们
+那么bucket的个数就是Capacity
+KV的个数就是Size
+Load_Factor就是装载因子，用来衡量HashMap的装载情况
+Threshold是扩容的阈值，在插入新元素时若发现插入后Size>=（Threshold=Capacity<em>Load_Factor），则会对HashMap进行扩容（Capacity</em>2）并将现有元素重新插入到新的HashMap中。</p>
+
+<p>回归正题，理解了HashMap中这几个重要概念之后，就能理解为了良好的权衡时间和空间成本，LOAD_FACTOR的设置比较重要，过高会降低空间成本但增加查找成本，建议使用默认设置。
+另外，如果对HashMap中存储的KV对的数量有个比较准确的估计，那么需要合理的设置Capacity的值，尽量减少扩容和Rehash的情况发生。</p>
+
+<h3>HashMap底层的数据结构</h3>
+
+<p>这里有几个关键的类，一个是HashMap本身，还有一个是Entry。java优秀封装性的一个体现在于容器类，HashMap也是一个容器类，我们可以在里面装入各种类型的KV对，无论K,V本身的类型。这是通过将KV封装成了一个Entry类来做到的。</p>
+
+<pre><code>static class Entry&lt;K,V&gt; implements Map.Entry&lt;K,V&gt; {
+        final K key;
+        V value;
+        Entry&lt;K,V&gt; next;
+        final int hash;
+
+        public final int hashCode() {
+            return (key==null   ? 0 : key.hashCode()) ^
+                   (value==null ? 0 : value.hashCode());
+        }
+
+        public final String toString() {
+            return getKey() + "=" + getValue();
+        }
+</code></pre>
+
+<p>HashMap在底层维护了一个数组table，来存放这些Entry。
+我们关注一下所有Entry都有一个属性为next，这是为了解决IndexFor冲突问题，在每一个table元素的位置实际上引入了一个链表结构，所有映射成相同Index的Entry将通过next指针组织放在同一条链表中。</p>
+
+<pre><code> public HashMap() {
+        this.loadFactor = DEFAULT_LOAD_FACTOR;
+        threshold = (int)(DEFAULT_INITIAL_CAPACITY * DEFAULT_LOAD_FACTOR);
+        table = new Entry[DEFAULT_INITIAL_CAPACITY];
+        init();
+    }
+</code></pre>
+
+<h3>HashMap中的插入和查找操作</h3>
+
+<p>先从put函数说起
+<figure class='code'><div class="highlight"><table><tr><td class="gutter"><pre class="line-numbers"><span class='line-number'>1</span>
+<span class='line-number'>2</span>
+<span class='line-number'>3</span>
+<span class='line-number'>4</span>
+<span class='line-number'>5</span>
+<span class='line-number'>6</span>
+<span class='line-number'>7</span>
+<span class='line-number'>8</span>
+<span class='line-number'>9</span>
+<span class='line-number'>10</span>
+<span class='line-number'>11</span>
+<span class='line-number'>12</span>
+<span class='line-number'>13</span>
+<span class='line-number'>14</span>
+<span class='line-number'>15</span>
+<span class='line-number'>16</span>
+<span class='line-number'>17</span>
+<span class='line-number'>18</span>
+<span class='line-number'>19</span>
+<span class='line-number'>20</span>
+<span class='line-number'>21</span>
+<span class='line-number'>22</span>
+<span class='line-number'>23</span>
+<span class='line-number'>24</span>
+<span class='line-number'>25</span>
+<span class='line-number'>26</span>
+<span class='line-number'>27</span>
+<span class='line-number'>28</span>
+<span class='line-number'>29</span>
+<span class='line-number'>30</span>
+<span class='line-number'>31</span>
+<span class='line-number'>32</span>
+<span class='line-number'>33</span>
+<span class='line-number'>34</span>
+<span class='line-number'>35</span>
+<span class='line-number'>36</span>
+<span class='line-number'>37</span>
+<span class='line-number'>38</span>
+<span class='line-number'>39</span>
+<span class='line-number'>40</span>
+<span class='line-number'>41</span>
+<span class='line-number'>42</span>
+<span class='line-number'>43</span>
+<span class='line-number'>44</span>
+<span class='line-number'>45</span>
+<span class='line-number'>46</span>
+<span class='line-number'>47</span>
+<span class='line-number'>48</span>
+<span class='line-number'>49</span>
+<span class='line-number'>50</span>
+<span class='line-number'>51</span>
+<span class='line-number'>52</span>
+<span class='line-number'>53</span>
+<span class='line-number'>54</span>
+<span class='line-number'>55</span>
+<span class='line-number'>56</span>
+<span class='line-number'>57</span>
+<span class='line-number'>58</span>
+<span class='line-number'>59</span>
+<span class='line-number'>60</span>
+<span class='line-number'>61</span>
+<span class='line-number'>62</span>
+<span class='line-number'>63</span>
+<span class='line-number'>64</span>
+<span class='line-number'>65</span>
+<span class='line-number'>66</span>
+<span class='line-number'>67</span>
+<span class='line-number'>68</span>
+<span class='line-number'>69</span>
+<span class='line-number'>70</span>
+<span class='line-number'>71</span>
+<span class='line-number'>72</span>
+<span class='line-number'>73</span>
+<span class='line-number'>74</span>
+<span class='line-number'>75</span>
+<span class='line-number'>76</span>
+<span class='line-number'>77</span>
+<span class='line-number'>78</span>
+<span class='line-number'>79</span>
+<span class='line-number'>80</span>
+<span class='line-number'>81</span>
+<span class='line-number'>82</span>
+<span class='line-number'>83</span>
+<span class='line-number'>84</span>
+<span class='line-number'>85</span>
+<span class='line-number'>86</span>
+<span class='line-number'>87</span>
+<span class='line-number'>88</span>
+<span class='line-number'>89</span>
+<span class='line-number'>90</span>
+<span class='line-number'>91</span>
+<span class='line-number'>92</span>
+<span class='line-number'>93</span>
+<span class='line-number'>94</span>
+<span class='line-number'>95</span>
+<span class='line-number'>96</span>
+<span class='line-number'>97</span>
+<span class='line-number'>98</span>
+<span class='line-number'>99</span>
+<span class='line-number'>100</span>
+<span class='line-number'>101</span>
+<span class='line-number'>102</span>
+<span class='line-number'>103</span>
+<span class='line-number'>104</span>
+<span class='line-number'>105</span>
+<span class='line-number'>106</span>
+<span class='line-number'>107</span>
+<span class='line-number'>108</span>
+<span class='line-number'>109</span>
+<span class='line-number'>110</span>
+<span class='line-number'>111</span>
+<span class='line-number'>112</span>
+<span class='line-number'>113</span>
+<span class='line-number'>114</span>
+<span class='line-number'>115</span>
+<span class='line-number'>116</span>
+<span class='line-number'>117</span>
+<span class='line-number'>118</span>
+<span class='line-number'>119</span>
+<span class='line-number'>120</span>
+<span class='line-number'>121</span>
+<span class='line-number'>122</span>
+<span class='line-number'>123</span>
+<span class='line-number'>124</span>
+<span class='line-number'>125</span>
+<span class='line-number'>126</span>
+<span class='line-number'>127</span>
+<span class='line-number'>128</span>
+<span class='line-number'>129</span>
+<span class='line-number'>130</span>
+<span class='line-number'>131</span>
+<span class='line-number'>132</span>
+<span class='line-number'>133</span>
+<span class='line-number'>134</span>
+<span class='line-number'>135</span>
+<span class='line-number'>136</span>
+<span class='line-number'>137</span>
+<span class='line-number'>138</span>
+<span class='line-number'>139</span>
+<span class='line-number'>140</span>
+<span class='line-number'>141</span>
+<span class='line-number'>142</span>
+<span class='line-number'>143</span>
+<span class='line-number'>144</span>
+<span class='line-number'>145</span>
+<span class='line-number'>146</span>
+<span class='line-number'>147</span>
+<span class='line-number'>148</span>
+<span class='line-number'>149</span>
+<span class='line-number'>150</span>
+<span class='line-number'>151</span>
+<span class='line-number'>152</span>
+<span class='line-number'>153</span>
+<span class='line-number'>154</span>
+<span class='line-number'>155</span>
+<span class='line-number'>156</span>
+</pre></td><td class='code'><pre><code class=''><span class='line'>/&lt;em&gt;*
+</span><span class='line'>    put操作
+</span><span class='line'>     &lt;/em&gt;/
+</span><span class='line'>    public V put(K key, V value) {
+</span><span class='line'>        if (key == null)
+</span><span class='line'>        //由于HashMap支持Key为Null,所以需要单独考虑Key为Null的情况
+</span><span class='line'>            return putForNullKey(value);
+</span><span class='line'>        //key本身是一个对象，但key对象的hashCode生成方法该对象自带的，可能是jdk定义的，也可能是用户自定义的，是不可控的，可能是比较差的hash函数，所以需要再进行一次hash，根据这个二次hash值来定位应该把当前Entry放到HashMap的第i个bucket中  &lt;br/&gt;
+</span><span class='line'>        int hash = hash(key.hashCode());
+</span><span class='line'>        int i = indexFor(hash, table.length);&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;    //将该Entry插入第i个bucket维护的链表结尾
+</span><span class='line'>    for (Entry&lt;K,V&gt; e = table[i]; e != null; e = e.next) {
+</span><span class='line'>        Object k;
+</span><span class='line'>        //如果该Entry已存在，返回旧值
+</span><span class='line'>        if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k))) {
+</span><span class='line'>            V oldValue = e.value;
+</span><span class='line'>            e.value = value;
+</span><span class='line'>            e.recordAccess(this);
+</span><span class='line'>            return oldValue;
+</span><span class='line'>        }
+</span><span class='line'>    }
+</span><span class='line'>//如果是新插入的Entry,将HashMap的版本码++，并将该Entry加入到链表结尾
+</span><span class='line'>    modCount++;
+</span><span class='line'>    addEntry(hash, key, value, i);
+</span><span class='line'>    return null;
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>  void addEntry(int hash, K key, V value, int bucketIndex) {
+</span><span class='line'>    Entry&lt;K,V&gt; e = table[bucketIndex];
+</span><span class='line'>        table[bucketIndex] = new Entry&lt;K,V&gt;(hash, key, value, e);
+</span><span class='line'>        //在插入时会判断是否需要扩容
+</span><span class='line'>        if (size++ &gt;= threshold)
+</span><span class='line'>            resize(2 * table.length);
+</span><span class='line'>    }
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;在put的过程中，有两个很重要的函数需要理解一下，分别是hash和indexfor。
+</span><span class='line'>hash的作用在前文已说明，是为了防御Key对象拥有的可能性能较差的hash函数。
+</span><span class='line'>当我们拥有了一个Key的hashCode，如何根据这个hashCode将这个Entry映射到数量为Capacity的某个bucket中去呢？
+</span><span class='line'>hashCode是一个32位的Int数，可表示的大小从-2147483648到2147483648，如果HashMap能有这么大的容量，那么根据HashCode的性质，若Key不同，则根本不存在冲突的可能。
+</span><span class='line'>当然不可能这么做。
+</span><span class='line'>比较容易想到的方法是将hashCode根据数组长度来取模。
+</span><span class='line'>然而取模运算比较低效，我们只需要达成一个目的，那就是hashCode会被映射为一个小于Capacity的值，并尽量均匀分布。具体做法见indexFor函数。
+</span><span class='line'>indexFor函数实际上只利用了HashCode的低n位来做散列，这里为了防止映射冲突，有两个trick[^2]：
+</span><span class='line'>1、Capacity需得是2的n次方幂；
+</span><span class='line'>2、hash优化函数将HashCode的每个四位都做了一次异或，意在混合原始哈希码的各个部分，以此来加大低位的随机性
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;/&lt;em&gt;*
+</span><span class='line'>    HashMap中定义的Hash方法，Null始终被映射为0
+</span><span class='line'>     &lt;/em&gt;/
+</span><span class='line'>    static int hash(int h) {&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;    //java1.7
+</span><span class='line'>    h ^= (h &gt;&gt;&gt; 20) ^ (h &gt;&gt;&gt; 12);
+</span><span class='line'>    return h ^ (h &gt;&gt;&gt; 7) ^ (h &gt;&gt;&gt; 4);
+</span><span class='line'>    //java1.8中简化了这个过程，具体见文末相关文章
+</span><span class='line'>}
+</span><span class='line'>
+</span><span class='line'>/**
+</span><span class='line'> * Returns index for hash code h.
+</span><span class='line'> */
+</span><span class='line'>static int indexFor(int h, int length) {
+</span><span class='line'>    return h &amp; (length-1);
+</span><span class='line'>}
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;
+</span><span class='line'>
+</span><span class='line'>理解了put操作，get操作就简单了
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;public V get(Object key) {
+</span><span class='line'>    if (key == null)
+</span><span class='line'>        return getForNullKey();
+</span><span class='line'>    int hash = hash(key.hashCode());
+</span><span class='line'>    for (Entry&lt;K,V&gt; e = table[indexFor(hash, table.length)];
+</span><span class='line'>         e != null;
+</span><span class='line'>         e = e.next) {
+</span><span class='line'>        Object k;
+</span><span class='line'>        if (e.hash == hash &amp;&amp; ((k = e.key) == key || key.equals(k)))
+</span><span class='line'>            return e.value;
+</span><span class='line'>    }
+</span><span class='line'>    return null;
+</span><span class='line'>}
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;```&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;hr /&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h2&gt;相关文章&lt;/h2&gt;
+</span><span class='line'>&lt;div class="footnotes"&gt;
+</span><span class='line'>&lt;hr/&gt;
+</span><span class='line'>&lt;ol&gt;
+</span><span class='line'>&lt;li id="fn:1"&gt;
+</span><span class='line'>&lt;p&gt;&lt;a href="http://blog.csdn.net/fan2012huan/article/details/51087722"&gt; HashMap中capacity、loadFactor、threshold、size等概念的解释 &lt;/a&gt;&lt;a href="#fnref:1" rev="footnote"&gt;&#8617;&lt;/a&gt;&lt;/p&gt;&lt;/li&gt;
+</span><span class='line'>&lt;/ol&gt;
+</span><span class='line'>&lt;/div&gt;
+</span><span class='line'>
+</span><span class='line'>]]&gt;&lt;/content&gt;
+</span><span class='line'>  &lt;/entry&gt;
+</span><span class='line'>  
+</span><span class='line'>  &lt;entry&gt;
+</span><span class='line'>    &lt;title type="html"&gt;&lt;![CDATA[Java多线程之死锁情形（持续更新)]]&gt;&lt;/title&gt;
+</span><span class='line'>    &lt;link href="http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin/"/&gt;
+</span><span class='line'>    &lt;updated&gt;2017-03-18T20:41:31+08:00&lt;/updated&gt;
+</span><span class='line'>    &lt;id&gt;http://spencer.me/blog/2017/03/18/javaduo-xian-cheng-zhi-si-suo-qing-xing-(chi-xu-geng-xin&lt;/id&gt;
+</span><span class='line'>    &lt;content type="html"&gt;&lt;![CDATA[&lt;p&gt;本文中的所有情形收集来自博客、论坛、github及自己在项目中遇到的情形。
+</span><span class='line'>持续更新中&lt;/p&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;h3&gt;1、多生产者多消费者问题中由于所有角色共享一个同步锁而发生死锁  &lt;a href="http://www.2cto.com/kf/201410/344213.html"&gt;&lt;strong&gt;&lt;em&gt;来源链接&lt;/em&gt;&lt;/strong&gt;&lt;/a&gt;&lt;/h3&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;pre&gt;&lt;code&gt;package CreatorAndConsumer;
+</span><span class='line'>
+</span><span class='line'>import java.util.ArrayList;
+</span><span class='line'>import java.util.List;
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>//盘子，表示共享的资源，在Plate类中维护一个eggs列表
+</span><span class='line'>public class Plate {
+</span><span class='line'>    private List&lt;object&gt; eggs = new ArrayList&lt;object&gt;();
+</span><span class='line'>
+</span><span class='line'>    /*
+</span><span class='line'>     * 获取蛋
+</span><span class='line'>     */
+</span><span class='line'>    public Object getEgg()
+</span><span class='line'>    {
+</span><span class='line'>        System.out.println("消费者取蛋");
+</span><span class='line'>        Object egg = eggs.get(0);
+</span><span class='line'>        eggs.remove(0);
+</span><span class='line'>        return egg;
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>
+</span><span class='line'>    /**
+</span><span class='line'>     * 加入蛋
+</span><span class='line'>     */
+</span><span class='line'>    public void addEgg(Object egg)
+</span><span class='line'>    {
+</span><span class='line'>        System.out.println("生产者生蛋");
+</span><span class='line'>        eggs.add(egg);
+</span><span class='line'>    }
+</span><span class='line'>
+</span><span class='line'>    /**
+</span><span class='line'>     * 获取蛋个数
+</span><span class='line'>     */
+</span><span class='line'>    public int getEggNum()
+</span><span class='line'>    {
+</span><span class='line'>        return eggs.size();
+</span><span class='line'>    }
+</span><span class='line'>}
+</span><span class='line'>&lt;/code&gt;&lt;/pre&gt;
+</span><span class='line'>
+</span><span class='line'>&lt;p&gt;接下来是消费者</span></code></pre></td></tr></table></div></figure>
+package CreatorAndConsumer;</p>
+
+<p>public class Consumer implements Runnable {
+    /<em>*
+     * 线程资源
+     </em>/
+    private Plate plate;</p>
+
+<pre><code>public Consumer(Plate plate) {
+    this.plate = plate;
+}
+
+@Override
+public void run() {
+    synchronized (plate) {//消费者获取锁
+
+        while (plate.getEggNum() &lt; 1) {
+            try {
+                // 如果蛋不够，消费者需要等待，进入wait，便会释放持有的锁，但不能保证是生产者获得了这个锁。进入wait之后需要等待其它线程的notify或者notifyAll唤醒
+                plate.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        // 被唤醒后，再次持有锁，放心地取蛋
+        plate.getEgg();
+        //取完蛋后，唤醒其它等待的线程
+        plate.notify();
+    }
+    //释放锁
+}
+</code></pre>
+
+<p>}
+<code>
+之后是生产者
+</code>
+package CreatorAndConsumer;</p>
+
+<p>/<strong>
+ * 生产者
+ */
+public class Creator implements Runnable {
+    /</strong>
+     * 线程资源
+     */
+    private Plate plate;</p>
+
+<pre><code>public Creator(Plate plate) {
+    this.plate = plate;
+}
+
+@Override
+public void run() {
+    synchronized (plate) {//生产者获取锁
+        // 如果此时盘中的蛋已放不下时，进入wait，暂时释放锁。但不能保证该锁被消费者拿到。等待消费者消费egg后被唤醒
+        while (plate.getEggNum() &gt;= 5) {
+            try {
+                plate.wait();
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        // 唤醒后，生产蛋
+        Object egg = new Object();
+        plate.addEgg(egg);
+        //生产了蛋之后唤醒其他线程
+        plate.notify();
+    }
+    //释放锁
+}
+</code></pre>
+
+<p>}
+```
+那么什么情况下，会出现死锁呢？
+举个栗子，当有多个生产者时，不能保证生产者释放的锁一定被消费者取得。若生产者释放的锁被另外一个生产者所取得，那么极可能出现两个生产者都进入wait之后，消费者才获取到锁，接着启动notify唤醒其中一个生产者。如此循环，另一个生产者可能总是处于wait状态。
+多个消费者时也同理。
+解决这个问题的思路是，生产者释放给消费者的锁不能被另一个生产者拿到。
+解决方案就是，增加一个给生产者专用的锁和给消费者专用的锁，保证每一次生产者需要释放锁给消费者时，其他的生产者都无法进入竞争环节。
+以消费者举例，修改后的代码如下：</p>
+
+<pre><code>public class Consumer implements Runnable {
+    /**
+     * 线程资源
+     */
+    private Plate plate;
+
+    /**
+     * 消费者锁
+     */
+    private static Object consumerLocker = new Object();
+
+    public Consumer(Plate plate) {
+        this.plate = plate;
+    }
+
+    @Override
+    public void run() {
+        // 必须先获得消费者锁才能消费，限制只有一个消费者线程能进入竞争共享资源锁Plate的环节
+        synchronized (consumerLocker) {
+            synchronized (plate) {
+                while (plate.getEggNum() &lt; 1) {
+                    try {
+                        plate.wait();
+                    } catch (InterruptedException e) {
+                        e.printStackTrace();
+                    }
+                }
+                plate.getEgg();
+                plate.notify();
+            }
+        }
+    }
+}
+</code></pre>
+
+<h3>2、并发下的HashMap Rehash导致死锁   <a href="https://github.com/oldratlee/fucking-java-concurrency"><strong><em>来源链接1</em></strong></a>  <a href="http://coolshell.cn/articles/9606.html"><strong><em>来源链接2</em></strong></a></h3>
+
+<h3>3、两个线程对两个共享资源加锁顺序不同导致死锁  <a href="https://github.com/oldratlee/fucking-java-concurrency"><strong><em>来源链接</em></strong></a></h3>
+
+<pre><code>/**
+ * @author Jerry Lee (oldratlee at gmail dot com)
+ */
+public class SymmetricLockDeadlockDemo {
+    static final Object lock1 = new Object();
+    static final Object lock2 = new Object();
+
+    public static void main(String[] args) throws Exception {
+        Thread thread1 = new Thread(new ConcurrencyCheckTask1());
+        thread1.start();
+        Thread thread2 = new Thread(new ConcurrencyCheckTask2());
+        thread2.start();
+    }
+
+    private static class ConcurrencyCheckTask1 implements Runnable {
+        @Override
+        public void run() {
+            System.out.println("ConcurrencyCheckTask1 started!");
+            while (true) {
+                synchronized (lock1) {
+                    synchronized (lock2) {
+                        System.out.println("Hello1");
+                    }
+                }
+            }
+        }
+    }
+
+    private static class ConcurrencyCheckTask2 implements Runnable {
+        @Override
+        public void run() {
+            System.out.println("ConcurrencyCheckTask2 started!");
+            while (true) {
+                synchronized (lock2) {
+                    synchronized (lock1) {
+                        System.out.println("Hello2");
+                    }
+                }
+            }
+        }
+    }
+}
+</code></pre>
+
+<p>这个例子理解起来比较简单，多线程环境下，Thread1获得B锁，等待A锁，Thread2获得A锁，等待B锁，造成了死锁。</p>
+]]></content>
+  </entry>
+  
+  <entry>
+    <title type="html"><![CDATA[Java之单例模式的各种实现]]></title>
+    <link href="http://spencer.me/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian/"/>
+    <updated>2017-03-14T16:07:05+08:00</updated>
+    <id>http://spencer.me/blog/2017/03/14/javazhi-dan-li-mo-shi-de-ge-chong-shi-xian</id>
+    <content type="html"><![CDATA[<p>最近连续在各种群里、博客里看到单例模式的讨论。根据我的理解总结一下：
+先直接说结论：最优雅最简洁最稳的方法是使用枚举实现单例模式。</p>
+
+<h2>饿汉式</h2>
+
+<pre><code>//无懒加载
+//在类加载时初始化唯一的实例对象，由jvm在多线程环境时保证线程安全
+//增加了初始化的时间和内存开销
+public class SingleDog {
+    private static final SingleDog instance = new SingleDog();
+
+    private SingleDog(){}
+
+    public SingleDog getInstance(){
+        return instance;
+    }
+}
+</code></pre>
+
+<h2>懒汉式</h2>
+
+<pre><code>//懒加载
+//因为实例化在getInstance里执行，所以每次访问instance，都需要获取同步锁，比较笨重；
+public class SingleDog {
+private static SingleDog instance = null;
+
+private SingleDog(){}
+
+synchronized public static SingleDog getInstance(){
+    //判断是否需要对Instance进行初始化
+    if(instance == null){
+        instance = new SingleDog();
+    }
+    return instance;
+
+}
+</code></pre>
+
+<h2>懒汉式多线程环境下优化 之 双重检查锁定</h2>
+
+<pre><code>//懒加载(双重检查锁定)
+//多线程访问时，只在可能需要对Instance进行初始化时获取锁，大多数时候直接读取Instance即可
+public class SingleDog {
+    //需用volatile关键字保证对这个变量所做的操作是所有线程可见的
+    private volatile static SingleDog instance = null;
+
+    private SingleDog(){}
+
+    public static SingleDog getInstance(){
+        //判断是否需要对Instance进行初始化
+        if(instance == null){
+            synchronized(SingleDog.class){
+                //对于已经获取到锁的其他线程，再次判断Instance是否需要进行初始化
+                if(instance == null){
+                    instance = new SingleDog();
+                }
+            }
+        }
+        return instance;
+
+    }
+//双重检查锁定也不能避免使用重度锁synchronized，在获取和释放锁的过程中会有性能损耗；同时需要两个if判断来确保只有一个实例，程序逻辑比较复杂
+</code></pre>
+
+<h2>懒汉式多线程环境下优化 之 静态内部类实现</h2>
+
+<pre><code>
+//与第一个饿汉式相比，使用一个私有静态内部类来代替SingleDog类，持有instance实例，达到了懒加载的目的。
+//摆脱了重度锁synchronized
+//那么多线程环境下一个类是否会被初始化多次呢？
+//jvm在类加载时会确保线程的安全，如果多个线程去初始化一个类，只会有第一个线程被执行，其他线程都会被阻塞而且不会再次进入到类的初始化中去。同一个类加载器下，一个类只会被初始化一次
+public class SingleDog {
+    private SingleDog() {}
+
+    private static class SingleHolder{
+        private static SingleDog instance = new SingleDog();
+    }
+
+    public static SingleDog getInstance(){
+        return SingleHolder.instance;
+    }
+}
+</code></pre>
+
+<h2>有什么办法破坏上述单例模式</h2>
+
+<h3>反射</h3>
+
+<p>虽然构造函数已经被限定为private了，但是只要有构造函数存在，就可以通过Java反射机制获取到它，还能强制性的setAccessble，将其设定为可访问，从而利用构造函数再生成一个新的实例，破坏单例模式。部分代码如下：</p>
+
+<pre><code>        SingleDog s1 = SingleDog.getInstance();
+        Class&lt;SingleDog&gt; cls = (Class&lt;SingleDog&gt;) s1.getClass();
+        Constructor&lt;SingleDog&gt; cons = cls.getDeclaredConstructor(new Class[] {});
+        cons .setAccessible(true);
+        SingleDog s2 = cons.newInstance(new Object[] {});
+        System.out.println(s1 == s2);//false
+</code></pre>
+
+<h3>反序列化</h3>
+
+<p>当将Java对象序列化后，再反序列时，readObject方法会自动创建一个新的实例。天然破坏了被序列化对象的单例模式。
+不过这个问题很好解决，只需要在类中添加一个方法就行：</p>
+
+<pre><code>public class SingleDog {
+    private SingleDog() {}
+
+    private static class SingleHolder{
+        private static SingleDog instance = new SingleDog();
+    }
+
+    public static SingleDog getInstance(){
+        return SingleHolder.instance;
+    }
+    //划重点！
+    public Object readResolve() {
+        return instance;
+    }
+}
+</code></pre>
+
+<h2>枚举实现单例模式</h2>
+
+<pre><code>//枚举实现单例模式
+//防反射、防反序列化、线程安全（实例在类初始化期间就已经创建）
+//枚举类实际上是继承于java.lang.Enum的一个抽象类，所以是无法用反射获取到其构造方法的
+enum SingleDog {
+    INSTANCE;
+    public static SingleDog getInstance() {
+        return INSTANCE;      
+    } 
+}
+</code></pre>
+
+<hr />
+
+<p>相关文章：
+<a href="http://blog.jobbole.com/94074/">深度分析 Java 的枚举类型：枚举的线程安全性及序列化问题</a>
+<a href="http://blog.csdn.net/huangyuan_xuan/article/details/52193006"> 浅谈使用单元素的枚举类型实现单例模式 </a>
+<a href="http://www.th7.cn/Program/java/201511/682115.shtml">单例模式那些坑</a></p>
+]]></content>
+  </entry>
+  
+</feed>
