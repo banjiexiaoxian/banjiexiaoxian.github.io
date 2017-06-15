@@ -1,4 +1,4 @@
 User-agent: *
 Disallow: 
 
-Sitemap: http://spencer.com/sitemap.xml 
+Sitemap: http://www.xspencer.me/sitemap.xml 
